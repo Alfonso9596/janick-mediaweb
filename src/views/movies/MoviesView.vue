@@ -1,0 +1,547 @@
+<script setup lang="ts">
+import { computed, reactive, ref, watch } from 'vue'
+import { getPageableMovies, getAllGenres, createNewMovie } from '@/api/networks/movies.network'
+import { uploadNewPoster } from '@/api/networks/files.network'
+import { useMovieStore } from '@/stores/movies.store'
+import { Column, DataTable, FileUpload } from 'primevue'
+import { useRoute } from 'vue-router'
+import { zodResolver } from '@primevue/forms/resolvers/zod'
+import { z } from 'zod'
+import { useToast } from 'primevue/usetoast'
+import router from '@/router'
+
+const movieStore = useMovieStore()
+const currentRoute = useRoute()
+const toast = useToast()
+
+const state = reactive<{
+  movieList: any[]
+  page: number
+  pageSize: number
+  sortBy: string
+  sortDir: string
+  totalRecords: number
+  totalPages: number | undefined
+  loading: boolean
+  searchName: string
+  searchGenre: string
+  createDialogVisible: boolean
+  genreListLoading: boolean
+  genreList: any[]
+}>({
+  movieList: [],
+  page: movieStore.moviesPage,
+  pageSize: movieStore.moviesPageSize,
+  sortBy: movieStore.moviesSortBy,
+  sortDir: movieStore.moviesSortDir,
+  totalRecords: 0,
+  totalPages: undefined,
+  loading: false,
+  searchName: '',
+  searchGenre: '',
+  createDialogVisible: false,
+  genreListLoading: false,
+  genreList: [],
+})
+
+const defaultFormValues = reactive<{
+  name: string
+  description: string
+  year: number
+  length: number
+  genres: string[]
+}>({
+  name: '',
+  description: '',
+  year: 0,
+  length: 0,
+  genres: [],
+})
+
+const createFormValues = reactive<{
+  name: string
+  description: string
+  year: number
+  length: number
+  genres: string[]
+  posterFile: any
+}>({
+  name: '',
+  description: '',
+  year: 0,
+  length: 0,
+  genres: [],
+  posterFile: null,
+})
+
+watch(
+  () => state.pageSize,
+  () => {
+    fetchMovies()
+    movieStore.setMoviesPageSize(state.pageSize)
+  },
+)
+
+watch(
+  () => state.page,
+  () => {
+    fetchMovies()
+    movieStore.setMoviesPage(state.page)
+  },
+)
+
+watch(
+  () => state.sortBy,
+  () => {
+    fetchMovies()
+    movieStore.setMoviesSortBy(state.sortBy)
+  },
+)
+
+watch(
+  () => state.sortDir,
+  () => {
+    fetchMovies()
+    movieStore.setMoviesSortDir(state.sortDir)
+  },
+)
+
+watch(
+  () => currentRoute.query,
+  () => {
+    fetchMovies()
+  },
+)
+
+watch(
+  () => state.searchName,
+  () => {
+    fetchMovies()
+  },
+)
+
+watch(
+  () => state.searchGenre,
+  () => {
+    fetchMovies()
+  },
+)
+
+const headers = computed(() => [
+  {
+    key: 'posterFilepath',
+    title: '',
+    image: true,
+  },
+  {
+    key: 'name',
+    title: 'Name',
+    sortable: true,
+  },
+  {
+    key: 'description',
+    title: 'Beschreibung',
+  },
+  {
+    key: 'year',
+    title: 'Erscheinungsjahr',
+    sortable: true,
+  },
+  {
+    key: 'length',
+    title: 'Länge',
+    sortable: true,
+  },
+  {
+    key: 'ratingValue',
+    title: 'Bewertung',
+  },
+])
+
+const fetchMovies = async () => {
+  state.loading = true
+
+  const params = {
+    pageSize: state.pageSize,
+    page: state.page,
+    sortBy: state.sortBy,
+    sortDir: state.sortDir,
+    ...currentRoute.query,
+    name: state.searchName ? state.searchName : '',
+    genre: state.searchGenre ? state.searchGenre : '',
+  }
+
+  const response = await getPageableMovies(params)
+  state.movieList = response.content
+  state.totalRecords = response.totalElements
+  state.totalPages = response.totalPages
+
+  state.loading = false
+}
+
+const fetchGenreList = async () => {
+  state.genreListLoading = true
+
+  const response = await getAllGenres()
+  state.genreList = response
+
+  state.genreListLoading = false
+}
+
+const capDescription = (value: string) => {
+  return value ? value.substring(0, 100) + '...' : ''
+}
+
+const goToMoviePage = (movie: any) => {
+  router.push('/movies/' + movie.id)
+}
+
+const resolver = ref(
+  zodResolver(
+    z.object({
+      name: z.string().min(1, { message: 'Der Name wird benötigt.' }),
+      year: z.union([
+        z
+          .number()
+          .gt(1887, {
+            message: "Der älteste Film ist der Kurzfilm 'Roundhay Garden Scene' aus dem Jahr 1888.",
+          })
+          .lt(new Date().getFullYear() + 1, {
+            message: 'Filme aus der Zukunft werden nicht akzeptiert.',
+          }),
+        z.literal(null),
+      ]),
+      length: z.union([
+        z.number().gt(0, { message: 'Muss länger als 0 Minuten sein.' }),
+        z.literal(null),
+      ]),
+    }),
+  ),
+)
+
+const onCreateFormSubmit = async (e) => {
+  if (e.valid) {
+    if (createFormValues.posterFile !== null) {
+      const posterResponse = await uploadNewPoster(
+        createFormValues.posterFile,
+        'MOVIE',
+        createFormValues.name,
+        String(createFormValues.year),
+      )
+
+      if (!posterResponse) {
+        console.error('Failed image upload')
+        toast.add({
+          severity: 'error',
+          summary: 'Ein Poster für \"' + createFormValues.name + '\" existiert bereits',
+          life: 5000,
+        })
+        return
+      }
+    }
+
+    const movieResponse = await createNewMovie(createFormValues)
+
+    if (!movieResponse) {
+      if (createFormValues.posterFile !== null) {
+        console.log('Failed movie upload, Poster succeeded')
+        toast.add({
+          severity: 'error',
+          summary: 'Das Bild wurde hochgeladen, aber der Film wurde nicht gespeichert',
+          life: 5000,
+        })
+        return
+      } else {
+        console.log('Failed movie upload')
+        toast.add({
+          severity: 'error',
+          summary: 'Der Film \"' + createFormValues.name + '\" existiert bereits',
+          life: 5000,
+        })
+        return
+      }
+    }
+    toast.add({
+      severity: 'success',
+      summary: 'Der Film \"' + createFormValues.name + '\" wurde gespeichert',
+      life: 3000,
+    })
+    state.createDialogVisible = false
+    fetchMovies()
+    fetchGenreList()
+  }
+}
+
+const clearCreateDialogForm = () => {
+  createFormValues.name = defaultFormValues.name
+  createFormValues.description = defaultFormValues.description
+  createFormValues.year = defaultFormValues.year
+  createFormValues.length = defaultFormValues.length
+  createFormValues.genres = defaultFormValues.genres
+  createFormValues.posterFile = null
+}
+
+function onPosterSelect(event) {
+  createFormValues.posterFile = event.files[0]
+}
+
+function onPosterRemove() {
+  createFormValues.posterFile = null
+}
+
+fetchGenreList()
+fetchMovies()
+</script>
+
+<template>
+  <div class="card">
+    <div class="font-semibold text-xl mb-4">Filme</div>
+    <DataTable
+      lazy
+      :value="state.movieList"
+      :paginator="true"
+      :rows="state.pageSize"
+      :rowsPerPageOptions="[10, 20, 50]"
+      :totalRecords="state.totalRecords"
+      :pageCount="state.totalPages"
+      dataKey="id"
+      :rowHover="true"
+      :loading="state.loading"
+      @page="state.page = $event.page"
+      @update:rows="state.pageSize = $event"
+      @update:sortField="state.sortBy = $event"
+      @update:sortOrder="state.sortDir = $event > 0 || $event === undefined ? 'asc' : 'desc'"
+    >
+      <template #header>
+        <div class="flex justify-end">
+          <Button
+            @click="state.createDialogVisible = true"
+            type="button"
+            label="Neu"
+            icon="pi pi-plus"
+          />
+          <Select
+            v-model="state.searchGenre"
+            :options="state.genreList"
+            filter
+            optionLabel="name"
+            optionValue="name"
+            placeholder="Filtern nach Genre"
+            showClear
+            class="md:w-56 ml-2"
+            :loading="state.genreListLoading"
+            :disabled="state.genreListLoading"
+          />
+          <IconField class="ml-2">
+            <InputIcon>
+              <i class="pi pi-search" />
+            </InputIcon>
+            <InputText v-model="state.searchName" placeholder="Suche..." />
+            <InputIcon class="pi pi-times" style="cursor: pointer" @click="state.searchName = ''" />
+          </IconField>
+        </div>
+      </template>
+      <Column
+        v-for="header of headers"
+        :key="header.key"
+        :field="header.key"
+        :header="header.title"
+        :sortable="header.sortable"
+        :showFilterMenu="false"
+      >
+        <template #body="{ data }">
+          <img
+            v-if="header.image"
+            :src="`http://localhost:8080/api/file?filename=${data[header.key]}`"
+            style="width: 50px"
+          />
+          <span v-else-if="data[header.key].length > 100" v-tooltip.top="data[header.key]">{{
+            capDescription(data[header.key])
+          }}</span>
+          <span v-else>{{ data[header.key] }}</span>
+        </template>
+      </Column>
+      <Column class="w-24 !text-end">
+        <template #body="{ data }">
+          <Button
+            icon="pi pi-info-circle"
+            outline
+            rounded
+            class="mr-2"
+            severity="info"
+            @click="goToMoviePage(data)"
+          />
+        </template>
+      </Column>
+    </DataTable>
+
+    <!-- CREATE MOVIE FORM DIALOG -->
+    <Dialog
+      @afterHide="clearCreateDialogForm"
+      v-model:visible="state.createDialogVisible"
+      modal
+      header="Neuen Film einfügen"
+      :style="{ width: '32rem' }"
+    >
+      <Form
+        v-slot="$createForm"
+        :resolver="resolver"
+        :initialValues="defaultFormValues"
+        @submit="onCreateFormSubmit"
+        class="formgrid grid"
+      >
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <InputText
+              v-model="createFormValues.name"
+              name="name"
+              class="flex-auto"
+              autocomplete="off"
+            />
+            <Message
+              v-if="$createForm.name?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $createForm.name.error?.message }}</Message
+            >
+            <label for="name">Name</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <InputNumber
+              v-model="createFormValues.year"
+              name="year"
+              class="flex-auto"
+              :useGrouping="false"
+            />
+            <Message
+              v-if="$createForm.year?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $createForm.year.error?.message }}</Message
+            >
+            <label for="year">Erscheinungsjahr</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12">
+          <FloatLabel variant="in">
+            <Textarea
+              v-model="createFormValues.description"
+              name="description"
+              class="w-full"
+              rows="5"
+              style="resize: none"
+            />
+            <label for="description">Beschreibung</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <InputNumber
+              v-model="createFormValues.length"
+              name="length"
+              class="w-full"
+              :useGrouping="false"
+            />
+            <Message
+              v-if="$createForm.length?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $createForm.length.error?.message }}</Message
+            >
+            <label for="length">Länge (Min.)</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <MultiSelect
+              v-model="createFormValues.genres"
+              name="genres"
+              fluid
+              display="chip"
+              :options="state.genreList"
+              optionLabel="name"
+              optionValue="name"
+              filter
+              placeholder="Genre auswählen"
+              :maxSelectedLabels="2"
+              selectedItemsLabel="{0} Genres ausgewählt"
+              :loading="state.genreListLoading"
+              :disabled="state.genreListLoading"
+            />
+            <label for="genres">Genres</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12">
+          <FileUpload
+            @select="onPosterSelect"
+            @clear="onPosterRemove"
+            customUpload
+            name="posterFilepath"
+            accept="image/*"
+            :fileLimit="1"
+          >
+            <template #header="{ chooseCallback, clearCallback, files }">
+              <div class="flex flex-wrap justify-between items-center flex-1 gap-4">
+                <div class="flex gap-2">
+                  <Button
+                    @click="chooseCallback()"
+                    icon="pi pi-cloud-upload"
+                    rounded
+                    variant="outlined"
+                    severity="success"
+                    :disabled="files.length > 0"
+                  />
+                  <Button
+                    @click="clearCallback()"
+                    icon="pi pi-times"
+                    rounded
+                    variant="outlined"
+                    severity="danger"
+                    :disabled="!files || files.length === 0"
+                  />
+                </div>
+              </div>
+            </template>
+            <template #content="{ files }">
+              <div class="flex flex-row gap-8">
+                <div v-if="files.length > 0">
+                  <div class="flex flex-wrap gap-4">
+                    <div>
+                      <img
+                        role="presentation"
+                        :alt="files[0]?.name"
+                        :src="files[0]?.objectURL"
+                        width="80"
+                        height="40"
+                      />
+                    </div>
+                    <span
+                      class="font-semibold text-ellipsis max-w-60 whitespace-nowrap overflow-hidden"
+                      >{{ files[0]?.name }}</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </template>
+            <template #empty>
+              <div class="flex items-center justify-center flex-col">
+                <i
+                  class="pi pi-cloud-upload !border-2 !rounded-full !p-4 !text-4xl !text-muted-color"
+                />
+                <p class="mt-6 mb-0">Bilddatei hierhin verschieben</p>
+              </div>
+            </template>
+          </FileUpload>
+        </div>
+        <div class="field col-6">
+          <Button type="submit" severity="success" label="Bestätigen" />
+        </div>
+      </Form>
+    </Dialog>
+  </div>
+</template>
