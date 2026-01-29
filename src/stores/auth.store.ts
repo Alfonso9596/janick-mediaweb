@@ -5,6 +5,7 @@ import AuthenticationNetwork from '@/api/networks/authentication.network'
 enum AUTH_KEYS {
   ACCESS_TOKEN = 'ACCESS_TOKEN',
   REFRESH_TOKEN = 'REFRESH_TOKEN',
+  USER = 'USER',
 }
 
 const parseJwt = (token: string | undefined) => {
@@ -33,15 +34,12 @@ export const useAuthStore = defineStore('auth', () => {
   const refreshToken: Ref<string | undefined> = ref(
     localStorage.getItem(AUTH_KEYS.REFRESH_TOKEN) || undefined,
   )
+  const user: Ref<string | undefined> = ref(localStorage.getItem(AUTH_KEYS.USER) || undefined)
 
   const decodedToken: Ref<Record<string, unknown> | undefined> = ref(parseJwt(accessToken.value))
   const decodedRefreshToken: Ref<Record<string, unknown> | undefined> = ref(
     parseJwt(refreshToken.value),
   )
-
-  const getDecodedToken = computed(() => {
-    return decodedToken.value
-  })
 
   async function isAuthenticatedAsync() {
     if (!accessToken.value && !refreshToken.value) {
@@ -69,27 +67,30 @@ export const useAuthStore = defineStore('auth', () => {
     return Date.now() < (dt.exp as number) * 1000
   }
 
-  function setTokens(t: string, rt: string): void {
+  function setTokens(t: string, rt: string, userValue: string): void {
     if (!t || !rt) {
-      console.error('No access token or refresh token')
       return
     }
     localStorage.setItem(AUTH_KEYS.ACCESS_TOKEN, t)
     localStorage.setItem(AUTH_KEYS.REFRESH_TOKEN, rt)
+    localStorage.setItem(AUTH_KEYS.USER, userValue)
 
     accessToken.value = t
     refreshToken.value = rt
     decodedToken.value = parseJwt(t)
     decodedRefreshToken.value = parseJwt(rt)
+    user.value = userValue
   }
 
   function removeTokens(): void {
     localStorage.removeItem(AUTH_KEYS.ACCESS_TOKEN)
     localStorage.removeItem(AUTH_KEYS.REFRESH_TOKEN)
+    localStorage.removeItem(AUTH_KEYS.USER)
     accessToken.value = undefined
     refreshToken.value = undefined
     decodedToken.value = undefined
     decodedRefreshToken.value = undefined
+    user.value = undefined
   }
 
   async function login(username: string | undefined, password: string | undefined) {
@@ -100,6 +101,27 @@ export const useAuthStore = defineStore('auth', () => {
     if (!response) {
       return false
     }
+
+    if (response.data.accessToken) {
+      setTokens(
+        response.data.accessToken,
+        response.data.refreshToken,
+        JSON.stringify(response.data),
+      )
+    }
+
+    return true
+  }
+
+  async function register(username: string | undefined, password: string | undefined) {
+    if (!username || !password) {
+      return false
+    }
+    const response = await AuthenticationNetwork.registerReqeust(username, password)
+    if (!response) {
+      return false
+    }
+
     return true
   }
 
@@ -107,15 +129,23 @@ export const useAuthStore = defineStore('auth', () => {
     if (!isTokenValid(decodedRefreshToken.value)) {
       return false
     }
-    const response = await AuthenticationNetwork.refreshTokenRequest()
+    const response = await AuthenticationNetwork.refreshTokenRequest(refreshToken.value)
     if (!response) {
       return false
     }
+    setTokens(response.data.accessToken, response.data.refreshToken, JSON.stringify(response.data))
+    return true
   }
 
   return {
     accessToken,
+    refreshToken,
     decodedToken,
+    decodedRefreshToken,
+    user,
     login,
+    register,
+    logout,
+    isAuthenticatedAsync,
   }
 })

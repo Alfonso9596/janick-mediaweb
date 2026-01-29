@@ -2,6 +2,9 @@
 import { getMovieById } from '@/api/networks/movies.network'
 import { onBeforeMount, reactive } from 'vue'
 import { useRoute } from 'vue-router'
+import { Rating } from 'primevue'
+import RatingOverview from '@/components/RatingOverview.vue'
+import { ref } from 'vue'
 
 const currentRoute = useRoute()
 
@@ -27,7 +30,8 @@ onBeforeMount(() => {
 
 <template>
   <div class="card">
-    <div class="font-semibold text-xl mb-4">{{ state.movie.name }}</div>
+    <div class="font-semibold text-xl mb-2">{{ state.movie.name }}</div>
+    <RatingOverview :item="state.movie" />
     <img
       v-if="state.movie.posterFilepath !== undefined"
       :src="`http://localhost:8080/api/file?filename=${state.movie.posterFilepath}`"

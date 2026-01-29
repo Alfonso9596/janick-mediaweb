@@ -4,6 +4,7 @@ import { StyleClass, Tooltip, ToastService } from 'primevue'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { all } from 'primelocale'
+import { httpInterceptor } from './api/httpInterceptor'
 
 import App from './App.vue'
 import router from './router'
@@ -32,3 +33,4 @@ app.use(PrimeVue, {
 app.use(ToastService)
 
 app.mount('#app')
+httpInterceptor()

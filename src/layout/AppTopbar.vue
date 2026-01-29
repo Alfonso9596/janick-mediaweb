@@ -1,14 +1,125 @@
 <script setup lang="ts">
-import { onBeforeMount } from 'vue'
+import { onBeforeMount, reactive, ref } from 'vue'
 import { useConfiguratorStore } from '@/stores/configurator.store'
+import { useAuthStore } from '@/stores/auth.store'
 import { useLayout } from '@/layout/composables/layout'
+import { useRouter } from 'vue-router'
+import { Dialog, Message, useToast } from 'primevue'
+import { Popover, Avatar } from 'primevue'
 import AppConfigurator from './AppConfigurator.vue'
+import { zodResolver } from '@primevue/forms/resolvers/zod'
+import { z } from 'zod'
 
 const configuratorStore = useConfiguratorStore()
+const authStore = useAuthStore()
+const router = useRouter()
+const toast = useToast()
 const { layoutConfig, toggleMenu, toggleDarkMode, isDarkTheme } = useLayout()
+const userDialog = ref()
+const loginDialog = ref(false)
+const isUserLoggedIn = ref(false)
+const profileBadge = ref('')
 
-onBeforeMount(() => {
+const toggleUserDialog = (event) => {
+  userDialog.value.toggle(event)
+}
+
+const defaultFormValues = reactive<{
+  username: string
+  password: string
+}>({
+  username: '',
+  password: '',
+})
+
+const loginFormValues = reactive<{
+  username: string
+  password: string
+}>({
+  username: '',
+  password: '',
+})
+
+const registerResolver = ref(
+  zodResolver(
+    z.object({
+      username: z.string().min(1, { message: 'Der Nutzername wird benötigt' }),
+      password: z.string().min(1, { message: 'Das Passwort wird benötigt' }),
+    }),
+  ),
+)
+
+const onLoginFormSubmit = async (e) => {
+  const response = await authStore.login(loginFormValues.username, loginFormValues.password)
+  console.log('failed onLoginFormSubmit')
+  if (!response) {
+    toast.add({
+      severity: 'error',
+      summary: 'Login fehlgeschlagen',
+      detail: 'Nutzername oder Passwort falsch',
+      life: 5000,
+    })
+  } else {
+    loginDialog.value = false
+    clearLoginForm()
+    isUserLoggedIn.value = true
+    profileBadge.value = authStore.decodedToken?.sub?.toString().charAt(0).toUpperCase() || '?'
+    toast.add({
+      severity: 'success',
+      summary: `Willkommen zurück ${authStore.decodedToken?.sub}`,
+      detail: 'Du wurdest erfolgreich eingeloggt',
+      life: 5000,
+    })
+  }
+}
+
+const clearLoginForm = () => {
+  loginFormValues.username = defaultFormValues.username
+  loginFormValues.password = defaultFormValues.password
+}
+
+const onLogout = async (e) => {
+  userDialog.value.hide()
+  await authStore.logout()
+  isUserLoggedIn.value = false
+  router.push('/')
+  toast.add({
+    severity: 'success',
+    summary: 'Erfolgreich ausgeloggt',
+    detail: 'Du wurdest erfolgreich ausgeloggt',
+    life: 5000,
+  })
+}
+
+const onRegisterFormSubmit = async (e) => {
+  const response = await authStore.register(loginFormValues.username, loginFormValues.password)
+  if (!response) {
+    toast.add({
+      severity: 'error',
+      summary: 'Registrierung fehlgeschlagen',
+      detail: 'Nutzername existiert bereits',
+      life: 5000,
+    })
+    return
+  } else {
+    await authStore.login(loginFormValues.username, loginFormValues.password)
+    toast.add({
+      severity: 'success',
+      summary: `Willkommen ${authStore.decodedToken?.sub}`,
+      detail: 'Deine Registrierung wurde abgeschlossen',
+      life: 5000,
+    })
+    loginDialog.value = false
+    clearLoginForm()
+    isUserLoggedIn.value = true
+    profileBadge.value = authStore.decodedToken?.sub?.toString().charAt(0).toUpperCase() || '?'
+  }
+}
+
+onBeforeMount(async () => {
   layoutConfig.darkTheme = configuratorStore.configuratorDarktheme
+  isUserLoggedIn.value = await authStore.isAuthenticatedAsync()
+  profileBadge.value = authStore.decodedToken?.sub?.toString().charAt(0).toUpperCase() || '?'
 })
 
 function onDarkThemeChange() {
@@ -97,12 +208,114 @@ function onDarkThemeChange() {
 
       <div class="layout-topbar-menu hidden lg:block">
         <div class="layout-topbar-menu-content">
-          <button type="button" class="layout-topbar-action">
-            <i class="pi pi-user"></i>
-            <span>Profile</span>
+          <button
+            v-if="!isUserLoggedIn"
+            type="button"
+            class="layout-topbar-action"
+            @click="loginDialog = true"
+          >
+            <i class="pi pi-sign-in"></i>
           </button>
+          <button v-else type="button" class="layout-topbar-action" @click="toggleUserDialog">
+            <i class="pi pi-user"></i>
+          </button>
+          <Popover @hide="clearLoginForm" ref="userDialog">
+            <div class="flex flex-col gap-4 w-[15rem]">
+              <div>
+                <div class="flex col-12 mb-0 items-center justify-center">
+                  <span>Hallo {{ authStore.decodedToken?.sub }}</span>
+                </div>
+                <div class="flex col-12 mb-0 items-center justify-center">
+                  <Button
+                    class="mb-2"
+                    type="submit"
+                    severity="error"
+                    label="Logout"
+                    @click="onLogout"
+                  />
+                </div>
+              </div>
+            </div>
+          </Popover>
         </div>
       </div>
     </div>
+    <Dialog
+      v-model:visible="loginDialog"
+      pt:root:class="!border-0 !bg-transparent"
+      pt:mask:class="backdrop-blur-sm"
+      @hide="clearLoginForm"
+    >
+      <template #container="{ closeCallback }">
+        <div
+          class="flex flex-col px-5 py-5 gap-6 rounded-2xl"
+          style="
+            background-image: radial-gradient(
+              circle at left top,
+              var(--p-surface-200),
+              var(--p-surface-700)
+            );
+          "
+        >
+          <div class="text-2xl font-bold text-white text-right">
+            <Button icon="pi pi-times" rounded @click="closeCallback" />
+          </div>
+          <!--<span class="text-2xl font-bold text-white text-right"><i class="pi pi-times" /></span>-->
+          <Form
+            v-slot="$registerForm"
+            class="flex flex-col"
+            :initialValues="defaultFormValues"
+            :resolver="registerResolver"
+            @submit="onLoginFormSubmit"
+          >
+            <div class="inline-flex flex-col gap-2 mb-4">
+              <FloatLabel variant="in">
+                <InputText
+                  v-model="loginFormValues.username"
+                  name="username"
+                  class="flex-auto"
+                  autocomplete="off"
+                />
+                <Message
+                  v-if="$registerForm.username?.invalid"
+                  severity="error"
+                  size="small"
+                  variant="simple"
+                  >{{ $registerForm.username.error?.message }}</Message
+                >
+                <label for="username">Benutzername</label>
+              </FloatLabel>
+            </div>
+            <div class="inline-flex flex-col gap-2 mb-4">
+              <FloatLabel variant="in">
+                <Password
+                  v-model="loginFormValues.password"
+                  name="password"
+                  class="flex-auto"
+                  :feedback="false"
+                />
+                <Message
+                  v-if="$registerForm.password?.invalid"
+                  severity="error"
+                  size="small"
+                  variant="simple"
+                  >{{ $registerForm.password.error?.message }}</Message
+                >
+                <label for="password">Passwort</label>
+              </FloatLabel>
+            </div>
+            <div class="inline-flex flex-col gap-4">
+              <Button type="submit" severity="success" label="Login" />
+              <Button
+                type="button"
+                severity="warning"
+                label="Registrieren"
+                @click="onRegisterFormSubmit"
+              />
+            </div>
+          </Form>
+        </div>
+      </template>
+    </Dialog>
   </div>
 </template>

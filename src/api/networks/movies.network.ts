@@ -1,4 +1,4 @@
-import http from '@/api/http'
+import { http } from '@/api/http'
 import { getParamsFromPath, getPathWithParams, convertParamsToURL } from '@/helpers/url.helper'
 
 const MOVIES_ENDPOINTS = {

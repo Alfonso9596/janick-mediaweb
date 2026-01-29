@@ -1,6 +1,6 @@
 <script setup lang="ts"></script>
 
 <template>
-  <Toast />
+  <Toast position="bottom-left" />
   <router-view />
 </template>
