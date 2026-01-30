@@ -13,8 +13,6 @@ const loginRequest = async (username: string, password: string) => {
       username,
       password,
     })
-    console.log('failed login request auth network')
-    console.log(response)
     return response
   } catch (e) {
     console.error(e)

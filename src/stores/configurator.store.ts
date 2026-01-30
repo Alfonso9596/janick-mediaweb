@@ -11,42 +11,47 @@ export enum CONFIGURATOR_KEYS {
 
 export const useConfiguratorStore = defineStore('configurator', () => {
   const configuratorPreset: Ref<string> = ref(
-    String(localStorage.getItem(CONFIGURATOR_KEYS.CONFIGURATOR_PRESET) ?? 'Aura'),
+    localStorage.getItem(CONFIGURATOR_KEYS.CONFIGURATOR_PRESET) || 'Aura',
   )
 
   function setConfiguratorPreset(preset: string): void {
+    configuratorPreset.value = preset
     localStorage.setItem(CONFIGURATOR_KEYS.CONFIGURATOR_PRESET, preset)
   }
 
   const configuratorPrimary: Ref<string> = ref(
-    String(localStorage.getItem(CONFIGURATOR_KEYS.CONFIGURATOR_PRIMARY) ?? 'emerald'),
+    localStorage.getItem(CONFIGURATOR_KEYS.CONFIGURATOR_PRIMARY) || 'emerald',
   )
 
   function setConfiguratorPrimary(primary: string): void {
+    configuratorPrimary.value = primary
     localStorage.setItem(CONFIGURATOR_KEYS.CONFIGURATOR_PRIMARY, primary)
   }
 
   const configuratorSurface: Ref<string> = ref(
-    String(localStorage.getItem(CONFIGURATOR_KEYS.CONFIGURATOR_SURFACE) ?? 'slate'),
+    localStorage.getItem(CONFIGURATOR_KEYS.CONFIGURATOR_SURFACE) || 'slate',
   )
 
   function setConfiguratorSurface(surface: string): void {
+    configuratorSurface.value = surface
     localStorage.setItem(CONFIGURATOR_KEYS.CONFIGURATOR_SURFACE, surface)
   }
 
   const configuratorDarktheme: Ref<boolean> = ref(
-    Boolean(localStorage.getItem(CONFIGURATOR_KEYS.CONFIGURATOR_DARKTHEME) ?? true),
+    Boolean(localStorage.getItem(CONFIGURATOR_KEYS.CONFIGURATOR_DARKTHEME) === 'true') || false,
   )
 
   function setConfiguratorDarkTheme(darktheme: boolean): void {
+    configuratorDarktheme.value = darktheme
     localStorage.setItem(CONFIGURATOR_KEYS.CONFIGURATOR_DARKTHEME, String(darktheme))
   }
 
   const configuratorMenumode: Ref<string> = ref(
-    String(localStorage.getItem(CONFIGURATOR_KEYS.CONFIGURATOR_MENUMODE) ?? 'static'),
+    localStorage.getItem(CONFIGURATOR_KEYS.CONFIGURATOR_MENUMODE) || 'static',
   )
 
   function setConfiguratorMenumode(menumode: string): void {
+    configuratorMenumode.value = menumode
     localStorage.setItem(CONFIGURATOR_KEYS.CONFIGURATOR_MENUMODE, menumode)
   }
 

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed, type Ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import AuthenticationNetwork from '@/api/networks/authentication.network'
 
 enum AUTH_KEYS {

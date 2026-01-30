@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { useLayout } from '@/layout/composables/layout'
 import { useRouter } from 'vue-router'
 import { Dialog, Message, useToast } from 'primevue'
-import { Popover, Avatar } from 'primevue'
+import { Popover } from 'primevue'
 import AppConfigurator from './AppConfigurator.vue'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
@@ -14,15 +14,31 @@ const configuratorStore = useConfiguratorStore()
 const authStore = useAuthStore()
 const router = useRouter()
 const toast = useToast()
-const { layoutConfig, toggleMenu, toggleDarkMode, isDarkTheme } = useLayout()
+const { layoutConfig, toggleMenu, executeDarkModeToggle, isDarkTheme } = useLayout()
 const userDialog = ref()
 const loginDialog = ref(false)
 const isUserLoggedIn = ref(false)
-const profileBadge = ref('')
 
-const toggleUserDialog = (event) => {
+const toggleUserDialog = (event: PointerEvent) => {
   userDialog.value.toggle(event)
 }
+
+const userMenuItems = ref([
+  {
+    label: 'Profil',
+    items: [
+      {
+        label: 'Einstellungen',
+        icon: 'pi pi-cog',
+      },
+      {
+        label: 'Abmelden',
+        icon: 'pi pi-sign-out',
+        command: () => onLogout(),
+      },
+    ],
+  },
+])
 
 const defaultFormValues = reactive<{
   username: string
@@ -49,9 +65,8 @@ const registerResolver = ref(
   ),
 )
 
-const onLoginFormSubmit = async (e) => {
+const onLoginFormSubmit = async () => {
   const response = await authStore.login(loginFormValues.username, loginFormValues.password)
-  console.log('failed onLoginFormSubmit')
   if (!response) {
     toast.add({
       severity: 'error',
@@ -63,7 +78,6 @@ const onLoginFormSubmit = async (e) => {
     loginDialog.value = false
     clearLoginForm()
     isUserLoggedIn.value = true
-    profileBadge.value = authStore.decodedToken?.sub?.toString().charAt(0).toUpperCase() || '?'
     toast.add({
       severity: 'success',
       summary: `Willkommen zurück ${authStore.decodedToken?.sub}`,
@@ -78,7 +92,7 @@ const clearLoginForm = () => {
   loginFormValues.password = defaultFormValues.password
 }
 
-const onLogout = async (e) => {
+const onLogout = async () => {
   userDialog.value.hide()
   await authStore.logout()
   isUserLoggedIn.value = false
@@ -91,7 +105,7 @@ const onLogout = async (e) => {
   })
 }
 
-const onRegisterFormSubmit = async (e) => {
+const onRegisterFormSubmit = async () => {
   const response = await authStore.register(loginFormValues.username, loginFormValues.password)
   if (!response) {
     toast.add({
@@ -112,18 +126,15 @@ const onRegisterFormSubmit = async (e) => {
     loginDialog.value = false
     clearLoginForm()
     isUserLoggedIn.value = true
-    profileBadge.value = authStore.decodedToken?.sub?.toString().charAt(0).toUpperCase() || '?'
   }
 }
 
 onBeforeMount(async () => {
-  layoutConfig.darkTheme = configuratorStore.configuratorDarktheme
   isUserLoggedIn.value = await authStore.isAuthenticatedAsync()
-  profileBadge.value = authStore.decodedToken?.sub?.toString().charAt(0).toUpperCase() || '?'
 })
 
 function onDarkThemeChange() {
-  toggleDarkMode()
+  executeDarkModeToggle()
   configuratorStore.setConfiguratorDarkTheme(isDarkTheme.value)
 }
 </script>
@@ -171,7 +182,7 @@ function onDarkThemeChange() {
     <div class="layout-topbar-actions">
       <div class="layout-config-menu">
         <button type="button" class="layout-topbar-action" @click="onDarkThemeChange">
-          <i :class="['pi', { 'pi-moon': isDarkTheme, 'pi-sun': !isDarkTheme }]"></i>
+          <i :class="['pi', { 'pi-moon': !isDarkTheme, 'pi-sun': isDarkTheme }]"></i>
         </button>
         <div class="relative">
           <button
@@ -219,20 +230,21 @@ function onDarkThemeChange() {
           <button v-else type="button" class="layout-topbar-action" @click="toggleUserDialog">
             <i class="pi pi-user"></i>
           </button>
-          <Popover @hide="clearLoginForm" ref="userDialog">
+          <Popover ref="userDialog">
             <div class="flex flex-col gap-4 w-[15rem]">
               <div>
                 <div class="flex col-12 mb-0 items-center justify-center">
                   <span>Hallo {{ authStore.decodedToken?.sub }}</span>
                 </div>
                 <div class="flex col-12 mb-0 items-center justify-center">
-                  <Button
+                  <Menu :model="userMenuItems" />
+                  <!--<Button
                     class="mb-2"
                     type="submit"
                     severity="error"
                     label="Logout"
                     @click="onLogout"
-                  />
+                  />-->
                 </div>
               </div>
             </div>
@@ -260,7 +272,6 @@ function onDarkThemeChange() {
           <div class="text-2xl font-bold text-white text-right">
             <Button icon="pi pi-times" rounded @click="closeCallback" />
           </div>
-          <!--<span class="text-2xl font-bold text-white text-right"><i class="pi pi-times" /></span>-->
           <Form
             v-slot="$registerForm"
             class="flex flex-col"

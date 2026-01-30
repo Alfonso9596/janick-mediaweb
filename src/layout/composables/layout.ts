@@ -10,7 +10,7 @@ const layoutConfig = reactive<{
   preset: 'Aura',
   primary: 'emerald',
   surface: null,
-  darkTheme: true,
+  darkTheme: false,
   menuMode: 'static',
 })
 
@@ -76,5 +76,6 @@ export function useLayout() {
     getSurface,
     setActiveMenuItem,
     toggleDarkMode,
+    executeDarkModeToggle,
   }
 }

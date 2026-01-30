@@ -12,7 +12,6 @@ function httpInterceptor() {
   http.interceptors.request.use(async (config) => {
     const controller = new AbortController()
     const { url } = config
-    console.log('HTTP INTERCEPTOR - request to URL:', url)
     if (isLoginRequest(url) || isRegisterRequest(url) || isRefreshTokenRequest(url)) {
       return {
         ...config,
@@ -22,7 +21,6 @@ function httpInterceptor() {
     const authStore = useAuthStore()
     if (!isRefreshTokenRequest(url)) {
       const isUserTokenValid = await authStore.isAuthenticatedAsync()
-      console.log('HTTP INTERCEPTOR - is user token valid:', isUserTokenValid)
       if (!isUserTokenValid && !isRefreshTokenRequest(url)) {
         controller.abort()
       }

@@ -568,6 +568,10 @@ function setupConfiguratorFromStorage() {
   const surface = surfaces.value.find((s) => s.name === configuratorStore.configuratorSurface)
   updateColors('primary', primary)
   updateColors('surface', surface)
+
+  if (configuratorStore.configuratorDarktheme) {
+    document.documentElement.classList.add('app-dark')
+  }
 }
 </script>
 
