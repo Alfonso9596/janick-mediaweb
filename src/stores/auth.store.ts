@@ -60,6 +60,21 @@ export const useAuthStore = defineStore('auth', () => {
     removeTokens()
   }
 
+  function isUserAdmin() {
+    if (!user.value) {
+      return false
+    }
+    console.log('User Value:', user.value)
+
+    if (user.value && typeof user.value === 'string') {
+      const userData = JSON.parse(user.value)
+      if (userData.roles?.includes('ADMIN')) {
+        return true
+      }
+    }
+    return false
+  }
+
   function isTokenValid(dt: Record<string, unknown> | undefined) {
     if (!dt) {
       return false
@@ -147,5 +162,6 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     logout,
     isAuthenticatedAsync,
+    isUserAdmin,
   }
 })

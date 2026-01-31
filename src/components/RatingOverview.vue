@@ -6,14 +6,17 @@ const props = defineProps({
   },
 })
 
-const setRating = (event) => {
-  console.log(event.value)
+const emit = defineEmits(['update:modelValue'])
+
+const emitRating = (event) => {
+  console.log(event)
+  emit('update:modelValue', event.value)
 }
 </script>
 
 <template>
   <div class="rating-overview mb-4" style="display: flex">
-    <Rating @change="setRating" :model-value="props.item.ratingValue" />
+    <Rating @change="emitRating" :model-value="props.item.ratingValue" />
     <p class="ml-3 pt-1">
       {{ props.item.ratingValue }}/5 ({{ props.item.ratingAmount }} Bewertungen)
     </p>

@@ -7,6 +7,7 @@ const MOVIES_ENDPOINTS = {
   allGenres: '/genres/movies',
   createMovie: '/movies',
   movieFiles: '/movies/:id/files',
+  addRating: '/movies/rating',
 }
 
 const getPageableMovies = async (params?: any) => {
@@ -81,12 +82,26 @@ const getMovieFiles = async (id: string) => {
   }
 }
 
+const addRating = async (id: number, rating: number) => {
+  try {
+    const response = await http.post(MOVIES_ENDPOINTS.addRating, {
+      id,
+      rating,
+    })
+    return response
+  } catch (e) {
+    console.error(e)
+    return false
+  }
+}
+
 export {
   getPageableMovies,
   getMovieById,
   getAllGenres,
   createNewMovie,
   getMovieFiles,
+  addRating,
   MOVIES_ENDPOINTS,
 }
 export default { getPageableMovies }

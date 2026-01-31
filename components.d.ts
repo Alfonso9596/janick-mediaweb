@@ -39,6 +39,7 @@ declare module 'vue' {
     TopbarComponent: typeof import('./src/components/TopbarComponent.vue')['default']
   }
   export interface GlobalDirectives {
+    Ripple: typeof import('primevue/ripple')['default']
     StyleClass: typeof import('primevue/styleclass')['default']
     Tooltip: typeof import('primevue/tooltip')['default']
   }

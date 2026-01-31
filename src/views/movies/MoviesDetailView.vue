@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { getMovieById, getMovieFiles } from '@/api/networks/movies.network'
+import { getMovieById, getMovieFiles, addRating } from '@/api/networks/movies.network'
 import { computed, onBeforeMount, reactive } from 'vue'
 import { useRoute } from 'vue-router'
+import { useToast } from 'primevue'
 import RatingOverview from '@/components/RatingOverview.vue'
 import { Chip, TreeTable } from 'primevue'
 import type { TreeNode } from 'primevue/treenode'
 
 const currentRoute = useRoute()
+const toast = useToast()
 
 const state = reactive<{
   movie: any
@@ -64,14 +66,31 @@ const fetchMovieById = async () => {
   const response = (await getMovieById(String(currentRoute.params.id))) || {}
   state.movie = response
   state.loading = false
+}
 
-  const filesResponse = await getMovieFiles(String(currentRoute.params.id))
-  state.files = filesResponse || []
+const fetchMovieFiles = async () => {
+  state.loading = true
+  const response = await getMovieFiles(String(currentRoute.params.id))
+  state.files = response || []
   numeratedTreeConfig()
+  state.loading = false
+}
+
+const setRating = async (event) => {
+  await addRating(state.movie.id, event)
+  fetchMovieById()
+
+  toast.add({
+    severity: 'success',
+    summary: 'Bewertung hinzugefügt',
+    detail: `Deine Bewertung von ${event} wurde hinzugefügt`,
+    life: 5000,
+  })
 }
 
 onBeforeMount(() => {
   fetchMovieById()
+  fetchMovieFiles()
 })
 </script>
 
@@ -84,7 +103,9 @@ onBeforeMount(() => {
           style="color: #ea0c74; margin-left: 1rem"
         ></i>
       </div>
-      <div class="col-span-4"><RatingOverview :item="state.movie" /></div>
+      <div class="col-span-4">
+        <RatingOverview @update:modelValue="setRating" :item="state.movie" />
+      </div>
       <div class="col-span-1">
         <img
           v-if="state.movie.posterFilepath !== undefined"
