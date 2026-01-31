@@ -4,8 +4,7 @@ import { useConfiguratorStore } from '@/stores/configurator.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { useLayout } from '@/layout/composables/layout'
 import { useRouter } from 'vue-router'
-import { Dialog, Message, useToast } from 'primevue'
-import { Popover } from 'primevue'
+import { Dialog, Message, useToast, Popover } from 'primevue'
 import AppConfigurator from './AppConfigurator.vue'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
@@ -14,7 +13,7 @@ const configuratorStore = useConfiguratorStore()
 const authStore = useAuthStore()
 const router = useRouter()
 const toast = useToast()
-const { layoutConfig, toggleMenu, executeDarkModeToggle, isDarkTheme } = useLayout()
+const { toggleMenu, executeDarkModeToggle, isDarkTheme } = useLayout()
 const userDialog = ref()
 const loginDialog = ref(false)
 const isUserLoggedIn = ref(false)
@@ -114,7 +113,6 @@ const onRegisterFormSubmit = async () => {
       detail: 'Nutzername existiert bereits',
       life: 5000,
     })
-    return
   } else {
     await authStore.login(loginFormValues.username, loginFormValues.password)
     toast.add({
@@ -238,13 +236,6 @@ function onDarkThemeChange() {
                 </div>
                 <div class="flex col-12 mb-0 items-center justify-center">
                   <Menu :model="userMenuItems" />
-                  <!--<Button
-                    class="mb-2"
-                    type="submit"
-                    severity="error"
-                    label="Logout"
-                    @click="onLogout"
-                  />-->
                 </div>
               </div>
             </div>

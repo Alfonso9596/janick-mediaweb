@@ -361,7 +361,7 @@ fetchMovies()
           <span v-else>{{ data[header.key] }}</span>
         </template>
       </Column>
-      <Column class="w-24 !text-end">
+      <Column class="w-24 text-end!">
         <template #body="{ data }">
           <Button
             icon="pi pi-info-circle"

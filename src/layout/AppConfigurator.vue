@@ -631,7 +631,8 @@ function setupConfiguratorFromStorage() {
           :allowEmpty="false"
         />
       </div>
-      <div class="flex flex-col gap-2">
+      <!-- DISABLED MENU MODE -->
+      <!--<div class="flex flex-col gap-2">
         <span class="text-sm text-muted-color font-semibold">Menu Mode</span>
         <SelectButton
           v-model="menuMode"
@@ -641,7 +642,7 @@ function setupConfiguratorFromStorage() {
           optionLabel="label"
           optionValue="value"
         />
-      </div>
+      </div>-->
     </div>
   </div>
 </template>

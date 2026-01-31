@@ -13,6 +13,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     Avatar: typeof import('primevue/avatar')['default']
     Button: typeof import('primevue/button')['default']
+    Column: typeof import('primevue/column')['default']
     ConfigSidebarComponent: typeof import('./src/components/ConfigSidebarComponent.vue')['default']
     Dialog: typeof import('primevue/dialog')['default']
     FileUpload: typeof import('primevue/fileupload')['default']

@@ -6,6 +6,7 @@ const MOVIES_ENDPOINTS = {
   movieById: '/movies/:id',
   allGenres: '/genres/movies',
   createMovie: '/movies',
+  movieFiles: '/movies/:id/files',
 }
 
 const getPageableMovies = async (params?: any) => {
@@ -64,5 +65,28 @@ const createNewMovie = async (body: any) => {
   }
 }
 
-export { getPageableMovies, getMovieById, getAllGenres, createNewMovie, MOVIES_ENDPOINTS }
+const getMovieFiles = async (id: string) => {
+  try {
+    let path = MOVIES_ENDPOINTS.movieFiles
+    if (getParamsFromPath(path)?.length) {
+      path = getPathWithParams(path, {
+        id,
+      })
+    }
+    const response = await http.get(path)
+    return response?.data
+  } catch (e) {
+    console.error(e)
+    return false
+  }
+}
+
+export {
+  getPageableMovies,
+  getMovieById,
+  getAllGenres,
+  createNewMovie,
+  getMovieFiles,
+  MOVIES_ENDPOINTS,
+}
 export default { getPageableMovies }
