@@ -24,6 +24,21 @@ const toggleUserDialog = (event: PointerEvent) => {
 
 const userMenuItems = ref([
   {
+    label: 'Administration',
+    visible: () => authStore.hasRole('ADMIN') ?? false,
+    items: [
+      {
+        label: 'Dashboard',
+        icon: 'pi pi-chart-line',
+        command: () => router.push('/admin'),
+      },
+      {
+        label: 'Benutzerverwaltung',
+        icon: 'pi pi-users',
+      },
+    ],
+  },
+  {
     label: 'Profil',
     items: [
       {
@@ -229,14 +244,27 @@ function onDarkThemeChange() {
             <i class="pi pi-user"></i>
           </button>
           <Popover ref="userDialog">
-            <div class="flex flex-col gap-4 w-[15rem]">
-              <div>
-                <div class="flex col-12 mb-0 items-center justify-center">
-                  <span>Hallo {{ authStore.decodedToken?.sub }}</span>
-                </div>
-                <div class="flex col-12 mb-0 items-center justify-center">
-                  <Menu :model="userMenuItems" />
-                </div>
+            <div class="flex flex-col gap-0 w-60">
+              <div class="flex col-12 mb-0 items-center justify-center pb-0">
+                <span class="text-xl" font-semibold
+                  >Willkommen, {{ authStore.decodedToken?.sub }}</span
+                >
+              </div>
+              <div class="flex col-12 mb-0 items-cneter justify-center pt-0 pb-0">
+                <Divider />
+              </div>
+              <div class="flex col-12 mb-0 items-center justify-center pt-0">
+                <Menu :model="userMenuItems" class="w-full md:w-60" style="border: none">
+                  <template #submenulabel="{ item }">
+                    <span class="text-primary font-bold">{{ item.label }}</span>
+                  </template>
+                  <template #item="{ item, props }">
+                    <a v-ripple class="flex items-center" v-bind="props.action">
+                      <span :class="item.icon" />
+                      <span>{{ item.label }}</span>
+                    </a>
+                  </template>
+                </Menu>
               </div>
             </div>
           </Popover>

@@ -6,21 +6,21 @@ const model = ref([
   {
     label: 'Filme',
     items: [
-      { label: 'Alle Filme', icon: 'pi pi-fw pi-list', to: '/movies' },
+      { label: 'Alle Filme', vicon: 'fa-film', to: '/movies' },
       //{ label: 'Bestbewertet', icon: 'pi pi-fw pi-star', to: '/movies?sortBy=ratingValue:desc' },
     ],
   },
   {
     label: 'Serien',
     items: [
-      { label: 'Alle Serien', icon: 'pi pi-gw pi-list', to: '/series' },
+      { label: 'Alle Serien', vicon: 'fa-tv', to: '/series' },
       //{ label: 'Bestbewertet', icon: 'pi pi-fw pi-star', to: '/series?sortBy=ratingValue:desc' },
     ],
   },
   {
     label: 'Spiele',
     items: [
-      { label: 'Alle Spiele', icon: 'pi pi-gw pi-list', to: '/games' },
+      { label: 'Alle Spiele', vicon: 'fa-gamepad', to: '/games' },
       //{ label: 'Bestbewertet', icon: 'pi pi-fw pi-star', to: '/games?sortBy=ratingValue:desc' },
       {
         label: 'Plattform',
@@ -29,6 +29,13 @@ const model = ref([
           { label: 'PSP', to: '/games?platform=PSP' },
         ],
       },
+    ],
+  },
+  {
+    label: 'Musik',
+    items: [
+      { label: 'Alle Alben', vicon: 'fa-music', to: '/music' },
+      //{ label: 'Bestbewertet', icon: 'pi pi-fw pi-star', to: '/music?sortBy=ratingValue:desc' },
     ],
   },
 ])

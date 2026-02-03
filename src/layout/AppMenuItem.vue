@@ -91,7 +91,8 @@ function checkActiveRoute(item) {
       :target="item.target"
       tabindex="0"
     >
-      <i :class="item.icon" class="layout-menuitem-icon"></i>
+      <v-icon v-if="item.vicon" :name="item.vicon" class="mr-2" />
+      <i v-else :class="item.icon" class="layout-menuitem-icon"></i>
       <span class="layout-menuitem-text">{{ item.label }}</span>
       <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items"></i>
     </a>
@@ -102,7 +103,8 @@ function checkActiveRoute(item) {
       tabindex="0"
       :to="item.to"
     >
-      <i :class="item.icon" class="layout-menuitem-icon"></i>
+      <v-icon v-if="item.vicon" :name="item.vicon" class="mr-2" />
+      <i v-else :class="item.icon" class="layout-menuitem-icon"></i>
       <span class="layout-menuitem-text">{{ item.label }}</span>
       <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items"></i>
     </router-link>

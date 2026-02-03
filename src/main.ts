@@ -5,6 +5,10 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { all } from 'primelocale'
 import { httpInterceptor } from './api/httpInterceptor'
+import { OhVueIcon, addIcons } from 'oh-vue-icons'
+import { FaFilm, FaGamepad, FaTv, FaMusic } from 'oh-vue-icons/icons/fa'
+
+addIcons(FaFilm, FaGamepad, FaTv, FaMusic)
 
 import App from './App.vue'
 import router from './router'
@@ -16,6 +20,8 @@ const app = createApp(App)
 
 app.directive('styleclass', StyleClass)
 app.directive('tooltip', Tooltip)
+
+app.component('v-icon', OhVueIcon)
 
 app.use(pinia)
 app.use(router)

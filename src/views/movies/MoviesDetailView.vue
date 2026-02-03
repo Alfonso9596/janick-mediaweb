@@ -122,12 +122,7 @@ onBeforeMount(() => {
           <span class="mt-2"><b>Dauer</b>: {{ state.movie.length }} Minuten</span>
         </div>
         <div class="col-span-2">
-          <Chip
-            class="mr-2"
-            v-for="genre in state.movie.genres"
-            :key="genre.id"
-            :label="genre.name"
-          />
+          <Chip class="mr-2" v-for="genre in state.movie.genres" :key="genre" :label="genre" />
         </div>
       </div>
       <div class="col-span-4 mt-5">

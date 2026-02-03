@@ -6,6 +6,7 @@ enum AUTH_KEYS {
   ACCESS_TOKEN = 'ACCESS_TOKEN',
   REFRESH_TOKEN = 'REFRESH_TOKEN',
   USER = 'USER',
+  ROLES = 'ROLES',
 }
 
 const parseJwt = (token: string | undefined) => {
@@ -35,6 +36,9 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.getItem(AUTH_KEYS.REFRESH_TOKEN) || undefined,
   )
   const user: Ref<string | undefined> = ref(localStorage.getItem(AUTH_KEYS.USER) || undefined)
+  const roles: Ref<string[] | undefined> = ref(
+    localStorage.getItem(AUTH_KEYS.ROLES)?.split(',') || undefined,
+  )
 
   const decodedToken: Ref<Record<string, unknown> | undefined> = ref(parseJwt(accessToken.value))
   const decodedRefreshToken: Ref<Record<string, unknown> | undefined> = ref(
@@ -45,15 +49,25 @@ export const useAuthStore = defineStore('auth', () => {
     if (!accessToken.value && !refreshToken.value) {
       await logout()
       return false
-    } else if (!isTokenValid(decodedToken.value)) {
-      const response = await fetchRefreshToken()
-      if (!response) {
-        await logout()
-      }
-      return response
-    } else {
+    }
+
+    if (isTokenValid(decodedToken.value)) {
       return true
     }
+
+    const response = await fetchRefreshToken()
+    if (!response) {
+      await logout()
+    }
+    return response
+  }
+
+  const hasRole = (role: string) => {
+    return roles.value?.includes(role)
+  }
+
+  const hasAnyRole = (roleList: string[]) => {
+    return roleList.some((role) => hasRole(role))
   }
 
   async function logout() {
@@ -64,7 +78,6 @@ export const useAuthStore = defineStore('auth', () => {
     if (!user.value) {
       return false
     }
-    console.log('User Value:', user.value)
 
     if (user.value && typeof user.value === 'string') {
       const userData = JSON.parse(user.value)
@@ -89,12 +102,14 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem(AUTH_KEYS.ACCESS_TOKEN, t)
     localStorage.setItem(AUTH_KEYS.REFRESH_TOKEN, rt)
     localStorage.setItem(AUTH_KEYS.USER, userValue)
+    localStorage.setItem(AUTH_KEYS.ROLES, JSON.parse(userValue).roles.join(','))
 
     accessToken.value = t
     refreshToken.value = rt
     decodedToken.value = parseJwt(t)
     decodedRefreshToken.value = parseJwt(rt)
     user.value = userValue
+    roles.value = JSON.parse(userValue).roles
   }
 
   function removeTokens(): void {
@@ -106,6 +121,7 @@ export const useAuthStore = defineStore('auth', () => {
     decodedToken.value = undefined
     decodedRefreshToken.value = undefined
     user.value = undefined
+    roles.value = undefined
   }
 
   async function login(username: string | undefined, password: string | undefined) {
@@ -158,10 +174,12 @@ export const useAuthStore = defineStore('auth', () => {
     decodedToken,
     decodedRefreshToken,
     user,
+    roles,
     login,
     register,
     logout,
     isAuthenticatedAsync,
-    isUserAdmin,
+    hasRole,
+    hasAnyRole,
   }
 })
