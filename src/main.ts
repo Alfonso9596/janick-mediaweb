@@ -6,9 +6,17 @@ import { createPinia } from 'pinia'
 import { all } from 'primelocale'
 import { httpInterceptor } from './api/httpInterceptor'
 import { OhVueIcon, addIcons } from 'oh-vue-icons'
-import { FaFilm, FaGamepad, FaTv, FaMusic } from 'oh-vue-icons/icons/fa'
+import {
+  FaFilm,
+  FaGamepad,
+  FaTv,
+  FaMusic,
+  FaUser,
+  FaUserShield,
+  FaUtensils,
+} from 'oh-vue-icons/icons/fa'
 
-addIcons(FaFilm, FaGamepad, FaTv, FaMusic)
+addIcons(FaFilm, FaGamepad, FaTv, FaMusic, FaUser, FaUserShield, FaUtensils)
 
 import App from './App.vue'
 import router from './router'

@@ -25,6 +25,7 @@ const model = ref([
       { label: 'Serien verwalten', vicon: 'fa-tv', to: '/admin/series' },
       { label: 'Spiele verwalten', vicon: 'fa-gamepad', to: '/admin/games' },
       { label: 'Musik verwalten', vicon: 'fa-music', to: '/admin/music' },
+      { label: 'Rezepte verwalten', vicon: 'fa-utensils', to: '/admin/recipes' },
     ],
   },
 ])

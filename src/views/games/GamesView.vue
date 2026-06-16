@@ -137,7 +137,7 @@ fetchGames()
 
 <template>
   <div class="card">
-    <div class="font-semibold text-xl mb-4">Games</div>
+    <div class="font-semibold text-xl mb-4">Spiele</div>
     <DataTable
       lazy
       :value="state.gameList"

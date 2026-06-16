@@ -307,6 +307,7 @@ fetchMovies()
       dataKey="id"
       :rowHover="true"
       :loading="state.loading"
+      removableSort
       @page="state.page = $event.page"
       @update:rows="state.pageSize = $event"
       @update:sortField="state.sortBy = $event"

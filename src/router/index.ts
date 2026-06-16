@@ -62,6 +62,11 @@ const routes = [
         component: () => import('@/views/admin/AdminPanel.vue'),
         meta: { requiresAuth: true, roles: ['ADMIN'] },
       },
+      {
+        path: '/admin/users',
+        component: () => import('@/views/admin/AdminUsersView.vue'),
+        meta: { requiresAuth: true, roles: ['ADMIN'] },
+      },
     ],
   },
   // Error Pages

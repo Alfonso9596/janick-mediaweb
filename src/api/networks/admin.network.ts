@@ -1,12 +1,44 @@
 import { http } from '@/api/http'
+import { getParamsFromPath, getPathWithParams, convertParamsToURL } from '@/helpers/url.helper'
 
 const ADMIN_ENDPOINTS = {
-  allUsers: '/admin/users',
+  pageableUsers: '/admin/users',
   userById: '/admin/users/:id',
   deleteUser: '/admin/users/:id',
+  allRoles: '/admin/roles',
   allMovies: '/admin/movies',
   allSeries: '/admin/series',
   allGames: '/admin/games',
+}
+
+const getPageableUsers = async (params?: any) => {
+  try {
+    let path = ADMIN_ENDPOINTS.pageableUsers
+    if (getParamsFromPath(path)?.length) {
+      path = getPathWithParams(path, {
+        ...params,
+      })
+    }
+    if (params) {
+      const convertedParams = convertParamsToURL(params)
+      path = `${path}?${convertedParams}`
+    }
+    const response = await http.get(path)
+    return response?.data
+  } catch (e) {
+    console.error(e)
+    return false
+  }
+}
+
+const getAllRoles = async () => {
+  try {
+    const response = await http.get(ADMIN_ENDPOINTS.allRoles)
+    return response?.data
+  } catch (e) {
+    console.error(e)
+    return false
+  }
 }
 
 const getAllMovies = async () => {
@@ -39,4 +71,4 @@ const getAllGames = async () => {
   }
 }
 
-export { getAllMovies, getAllSeries, getAllGames }
+export { getPageableUsers, getAllRoles, getAllMovies, getAllSeries, getAllGames }
