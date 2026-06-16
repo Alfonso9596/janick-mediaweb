@@ -13,7 +13,7 @@ const configuratorStore = useConfiguratorStore()
 const authStore = useAuthStore()
 const router = useRouter()
 const toast = useToast()
-const { toggleMenu, executeDarkModeToggle, isDarkTheme } = useLayout()
+const { toggleMenu, executeDarkModeToggle, isDarkTheme, isPageLoading } = useLayout()
 const userDialog = ref()
 const loginDialog = ref(false)
 const isUserLoggedIn = ref(false)
@@ -194,6 +194,9 @@ function onDarkThemeChange() {
 
     <div class="layout-topbar-actions">
       <div class="layout-config-menu">
+        <div class="page-loading-spinner">
+          <ProgressSpinner v-if="isPageLoading" />
+        </div>
         <button type="button" class="layout-topbar-action" @click="onDarkThemeChange">
           <i :class="['pi', { 'pi-moon': !isDarkTheme, 'pi-sun': isDarkTheme }]"></i>
         </button>

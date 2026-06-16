@@ -2,6 +2,7 @@ import AppLayout from '@/layout/AppLayout.vue'
 import AdminLayout from '@/layout/admin/AdminLayout.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { createRouter, createWebHistory } from 'vue-router'
+import { useLayout } from '@/layout/composables/layout'
 
 const routes = [
   {
@@ -84,7 +85,9 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const { isAuthenticatedAsync, hasAnyRole } = useAuthStore()
+  const { setPageLoading } = useLayout()
 
+  setPageLoading(true)
   if (to.meta.requiresAuth && !isAuthenticatedAsync) {
     next({ name: 'Home' })
   } else if (to.meta.roles && !hasAnyRole(to.meta.roles as string[])) {
@@ -92,6 +95,11 @@ router.beforeEach((to, from, next) => {
   } else {
     next()
   }
+})
+
+router.afterEach((to, from) => {
+  const { setPageLoading } = useLayout()
+  setPageLoading(false)
 })
 
 export { routes }

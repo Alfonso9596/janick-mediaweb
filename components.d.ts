@@ -33,6 +33,8 @@ declare module 'vue' {
     NavSidebarComponent: typeof import('./src/components/NavSidebarComponent.vue')['default']
     Password: typeof import('primevue/password')['default']
     Popover: typeof import('primevue/popover')['default']
+    ProgressBar: typeof import('primevue/progressbar')['default']
+    ProgressSpinner: typeof import('primevue/progressspinner')['default']
     Rating: typeof import('primevue/rating')['default']
     RatingOverview: typeof import('./src/components/RatingOverview.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

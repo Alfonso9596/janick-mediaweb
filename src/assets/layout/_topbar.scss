@@ -37,6 +37,16 @@
     }
   }
 
+  .page-loading-spinner {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-left: 1rem;
+  }
+
   .layout-topbar-action {
     display: inline-flex;
     justify-content: center;
@@ -130,6 +140,14 @@
 
       .layout-topbar-menu-content {
         gap: 0.5rem;
+      }
+
+      .page-loading-spinner {
+        display: flex;
+        width: 100%;
+        height: auto;
+        justify-content: center;
+        padding: 0.5rem 1rem;
       }
 
       .layout-topbar-action {

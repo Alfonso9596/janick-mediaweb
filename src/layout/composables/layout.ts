@@ -22,11 +22,16 @@ const layoutState = reactive({
   staticMenuMobileActive: false,
   menuHoverActive: false,
   activeMenuItem: null,
+  pageLoading: false,
 })
 
 export function useLayout() {
   const setActiveMenuItem = (item) => {
     layoutState.activeMenuItem = item.value || item
+  }
+
+  const setPageLoading = (loading: boolean) => {
+    layoutState.pageLoading = loading
   }
 
   const toggleDarkMode = () => {
@@ -66,6 +71,8 @@ export function useLayout() {
 
   const getSurface = computed(() => layoutConfig.surface)
 
+  const isPageLoading = computed(() => layoutState.pageLoading)
+
   return {
     layoutConfig,
     layoutState,
@@ -74,7 +81,9 @@ export function useLayout() {
     isDarkTheme,
     getPrimary,
     getSurface,
+    isPageLoading,
     setActiveMenuItem,
+    setPageLoading,
     toggleDarkMode,
     executeDarkModeToggle,
   }
