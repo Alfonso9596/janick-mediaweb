@@ -48,7 +48,7 @@ watch(
     <div class="flex justify-between mb-4">
       <div>
         <span class="block text-muted-color font-medium mb-4">Filme</span>
-        <div class="text-surface-900 dark:text-surface-0 font-medium text-xl">
+        <div class="font-medium text-xl">
           {{ movieAmount }}
         </div>
       </div>

@@ -18,6 +18,13 @@ const userDialog = ref()
 const loginDialog = ref(false)
 const isUserLoggedIn = ref(false)
 
+const props = defineProps({
+  isAdminPanel: {
+    type: Boolean,
+    default: false,
+  },
+})
+
 const toggleUserDialog = (event: PointerEvent) => {
   userDialog.value.toggle(event)
 }
@@ -35,6 +42,7 @@ const userMenuItems = ref([
       {
         label: 'Benutzerverwaltung',
         icon: 'pi pi-users',
+        command: () => router.push('/admin/users')
       },
     ],
   },
@@ -188,7 +196,7 @@ function onDarkThemeChange() {
           </g>
         </svg>
 
-        <span>Janick's MediaDB</span>
+        <span>Janick's MediaDB{{ isAdminPanel ? ' (ADMIN)' : ''}}</span>
       </router-link>
     </div>
 

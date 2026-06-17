@@ -10,11 +10,14 @@ import {
   Message,
   MultiSelect,
 } from 'primevue'
-import { getAllRoles, getPageableUsers } from '@/api/networks/admin.network'
+import { getAllRoles, getPageableUsers, createUser, deleteUser, editUser } from '@/api/networks/admin.network'
 import { useAuthStore } from '@/stores/auth.store'
 import { computed, reactive, ref, watch } from 'vue'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
+import { useToast } from 'primevue/usetoast'
+
+const toast = useToast()
 
 const authStore = useAuthStore()
 
@@ -31,7 +34,12 @@ const state = reactive<{
   searchRole: string
   roleListLoading: boolean
   roleList: any[]
+  createDialogVisible: boolean
   editDialogVisible: boolean
+  editDialogUserId: number
+  deleteDialogVisible: boolean
+  deleteDialogUsername: string
+  deleteDialogUserId: number
 }>({
   userList: [],
   totalRecrods: 0,
@@ -45,7 +53,12 @@ const state = reactive<{
   searchRole: '',
   roleListLoading: false,
   roleList: [],
+  createDialogVisible: false,
+  editDialogUserId: 0,
   editDialogVisible: false,
+  deleteDialogVisible: false,
+  deleteDialogUsername: '',
+  deleteDialogUserId: 0,
 })
 
 const headers = computed(() => [
@@ -68,60 +81,164 @@ const headers = computed(() => [
   },
 ])
 
-const editUserInitialValues = reactive<{
+const createUserInitialValues = reactive<{
   username: string
   password: string
   roles: string[]
-  editPassword: boolean
+  isEnabled: boolean
 }>({
   username: '',
   password: '',
   roles: [],
-  editPassword: false,
+  isEnabled: true,
+})
+
+const createUserFormValues = reactive<{
+  username: string
+  password: string
+  roles: string[]
+  isEnabled: boolean
+}>({
+  username: '',
+  password: '',
+  roles: [],
+  isEnabled: true,
 })
 
 const editUserFormValues = reactive<{
-  username: string
-  password: string
+  username?: string
+  password?: string
   roles: string[]
-  editPassword: boolean
+  editPassword?: boolean
+  isEnabled: boolean
 }>({
   username: '',
   password: '',
   roles: [],
   editPassword: false,
+  isEnabled: false,
 })
+
+const createUserResolver = ref(
+  zodResolver(
+    z.object({
+      username: z.string().min(3, 'Der Benutzername muss mindestens 3 Zeichen lang sein.'),
+      password: z.string().min(5, 'Das Passwort muss mindestens 5 Zeichen lang sein.'),
+    }),
+  ),
+)
 
 const editUserResolver = ref(
   zodResolver(
     z.object({
       username: z.string().min(3, 'Der Benutzername muss mindestens 3 Zeichen lang sein.'),
+      password: z.string().min(5, 'Das Passwort muss mindestens 5 Zeichen lang sein.'),
     }),
   ),
 )
 
+const onCreateUserFormSubmit = async (e) => {
+  if (e.valid) {
+    const createUserResponse = await createUser(createUserFormValues)
+
+    if (!createUserResponse) {
+      console.log('Failed user creation')
+      toast.add({
+        severity: 'error',
+        summary: 'Benutzer \"' + createUserFormValues.username + '\" existiert bereits',
+        life: 5000,
+      })
+    }
+    toast.add({
+      severity: 'success',
+      summary: 'Benutzer \"' + createUserFormValues.username + '\" erfolgreich erstellt',
+      life: 3000,
+    })
+    state.createDialogVisible = false
+  }
+  fetchUsers()
+  fetchRoleList()
+}
+
+const onDeleteUserSubmit = async () => {
+  console.log('Deleting user with ID:', state.deleteDialogUserId)
+  const deleteUserResponse = await deleteUser(state.deleteDialogUserId)
+
+  if (!deleteUserResponse) {
+    console.log('Failed user deletion')
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler beim Löschen des Benutzers \"' + state.deleteDialogUsername + '\"',
+      life: 5000,
+    })
+  } else {
+    toast.add({
+      severity: 'success',
+      summary: 'Benutzer \"' + state.deleteDialogUsername + '\" erfolgreich gelöscht',
+      life: 3000,
+    })
+  }
+  state.deleteDialogVisible = false
+  fetchUsers()
+}
+
 const onEditUserFormSubmit = async (e) => {
-  console.log(e)
+  if (!editUserFormValues.editPassword) {
+    delete editUserFormValues.password
+  }
+  delete editUserFormValues.editPassword
+  const editUserResponse = await editUser(state.editDialogUserId, editUserFormValues)
+
+  if (!editUserResponse) {
+    console.log('Failed user edit')
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler beim Bearbeiten des Benutzers \"' + editUserFormValues.username + '\"',
+      life: 5000,
+    })
+  } else {
+    toast.add({
+      severity: 'success',
+      summary: 'Benutzer \"' + editUserFormValues.username + '\" erfolgreich bearbeitet',
+      life: 3000,
+    })
+  }
+  state.editDialogVisible = false
+  fetchUsers()
+}
+
+const clearCreateDialogForm = () => {
+  createUserFormValues.username = ''
+  createUserFormValues.password = ''
+  createUserFormValues.roles = []
+  createUserFormValues.isEnabled = true
 }
 
 const showEditUserDialog = (user: any) => {
-  editUserInitialValues.username = user.username
-  editUserInitialValues.password = ''
-  editUserInitialValues.roles = [...user.roles]
-  editUserInitialValues.editPassword = false
+  console.log(user.enabled)
+  state.editDialogUserId = user.id
+  editUserFormValues.username = user.username
+  editUserFormValues.password = ''
+  editUserFormValues.roles = [...user.roles]
+  editUserFormValues.editPassword = false
+  editUserFormValues.isEnabled = user.enabled
   state.editDialogVisible = true
 }
 
-const hideEditUserDialog = () => {
+const clearEditDialogForm = () => {
   state.editDialogVisible = false
-  editUserInitialValues.username = ''
-  editUserInitialValues.password = ''
-  editUserInitialValues.roles = []
 
   editUserFormValues.username = ''
   editUserFormValues.password = ''
   editUserFormValues.roles = []
   editUserFormValues.editPassword = false
+  editUserFormValues.isEnabled = false
+}
+
+const showDeleteUserDialog = async (user: any) => {
+  state.deleteDialogUsername = user.username
+  state.deleteDialogUserId = user.id
+  state.deleteDialogVisible = true
 }
 
 watch(
@@ -191,6 +308,12 @@ fetchRoleList()
     >
       <template #header>
         <div class="flex justify-end">
+          <Button
+            @click="state.createDialogVisible = true"
+            type="button"
+            label="Neu"
+            icon="pi pi-plus"
+          />
           <IconField class="ml-2">
             <InputIcon>
               <i class="pi pi-search" />
@@ -210,9 +333,9 @@ fetchRoleList()
       >
         <template #body="{ data }">
           <div v-if="header.type === 'array'">
-            <Chip v-for="role in data[header.key]" :key="role" :label="role">
+            <Chip class="mr-2" v-for="role in data[header.key]" :key="role" :label="role">
               <template #icon>
-                <v-icon v-if="role === 'ADMIN'" name="fa-user-shield" />
+                <v-icon  v-if="role === 'ADMIN'" name="fa-user-shield" />
                 <v-icon v-else name="fa-user" />
               </template>
             </Chip>
@@ -254,23 +377,110 @@ fetchRoleList()
             rounded
             :disabled="authStore.decodedToken?.sub === data.username"
             v-tooltip.top="'Löschen'"
+            @click="showDeleteUserDialog(data)"
           />
         </template>
       </Column>
     </DataTable>
 
-    <!-- Edit User Dialog -->
+    <!-- CREATE USER FORM DIALOG -->
+    <Dialog
+      @afterHide="clearCreateDialogForm"
+      v-model:visible="state.createDialogVisible"
+      modal
+      header="Benutzer erstellen"
+      :style="{ width: '32rem' }"
+    >
+      <Form
+        v-slot="$createForm"
+        :resolver="createUserResolver"
+        :initialValues="createUserInitialValues"
+        @submit="onCreateUserFormSubmit"
+        class="formgrid grid"
+      >
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <InputText
+              v-model="createUserFormValues.username"
+              name="username"
+              class="flex-auto"
+              autocomplete="off"
+            />
+            <Message
+              v-if="$createForm.username?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $createForm.username.error?.message }}</Message
+            >
+            <label for="username">Benutzername</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <MultiSelect
+              v-model="createUserFormValues.roles"
+              name="roles"
+              fluid
+              :options="state.roleList"
+              optionLabel="name"
+              optionValue="name"
+              filter
+              placeholder="Rolle auswählen"
+              :maxSelectedLabels="2"
+              selectedItemsLabel="{0} Rolles ausgewählt"
+              :loading="state.roleListLoading"
+              :disabled="state.roleListLoading"
+            />
+            <label for="roles">Rollen</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <InputText
+              v-model="createUserFormValues.password"
+              name="password"
+              class="flex-auto"
+              autocomplete="new-password"
+              type="password"
+            />
+            <Message
+              v-if="$createForm.password?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $createForm.password.error?.message }}</Message
+            >
+            <label for="password">Passwort</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <div class="flex items-center gap-2 mt-3">
+            <Checkbox
+              v-model="createUserFormValues.isEnabled"
+              name="isEnabled"
+              :binary="true"
+            />
+            <label for="isEnabled" class="ml-2">Benutzer aktivieren</label>
+          </div>
+        </div>
+        <div class="field col-6">
+          <Button type="submit" severity="success" label="Bestätigen" />
+        </div>
+      </Form>
+    </Dialog>
+
+    <!-- EDIT USER FORM DIALOG -->
     <Dialog
       v-model:visible="state.editDialogVisible"
-      @hide="hideEditUserDialog"
+      @afterHide="clearEditDialogForm"
       header="Benutzer bearbeiten"
       modal
-      style="width: 32rem"
+      :style="{ width: '32rem' }"
     >
       <Form
         v-slot="$editUserForm"
         :resolver="editUserResolver"
-        :initialValues="editUserInitialValues"
         @submit="onEditUserFormSubmit"
         class="formgrid grid"
       >
@@ -321,6 +531,13 @@ fetchRoleList()
               type="password"
               :disabled="!editUserFormValues.editPassword"
             />
+            <Message
+              v-if="$editUserForm.password?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $editUserForm.password.error?.message }}</Message
+            >
             <label for="password">Passwort</label>
           </FloatLabel>
         </div>
@@ -334,17 +551,44 @@ fetchRoleList()
             <label for="editPassword" class="ml-2">Passwort ändern</label>
           </div>
         </div>
-        <div class="field col-6">
+        <div class="field col-12 md:col-6">
+          <div class="flex items-center gap-2 mt-3">
+            <Checkbox
+              v-model="editUserFormValues.isEnabled"
+              name="isEnabled"
+              :binary="true"
+            />
+            <label for="isEnabled" class="ml-2">Benutzer aktivieren</label>
+          </div>
+        </div>
+        <div class="field col-12">
           <Button type="submit" severity="success" label="Bestätigen" />
-          <Button
-            type="button"
-            severity="danger"
-            label="Abbrechen"
-            class="ml-2"
-            @click="hideEditUserDialog"
-          />
         </div>
       </Form>
+    </Dialog>
+
+    <!-- DELETE USER FORM DIALOG -->
+    <Dialog
+      v-model:visible="state.deleteDialogVisible"
+      modal
+      header="Benutzer löschen"
+      :style="{ width: '32rem' }"
+    >
+      <div class="flex flex-col gap-4">
+        <p>Möchten Sie den Benutzer "{{ state.deleteDialogUsername }}" wirklich löschen?</p>
+        <div class="flex justify-end gap-2">
+          <Button
+            label="Abbrechen"
+            severity="secondary"
+            @click="state.deleteDialogVisible = false"
+          />
+          <Button
+            @click="onDeleteUserSubmit"
+            label="Löschen"
+            severity="danger"
+          />
+        </div>
+      </div>
     </Dialog>
   </div>
 </template>

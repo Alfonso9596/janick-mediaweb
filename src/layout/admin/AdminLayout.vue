@@ -62,7 +62,7 @@ function isOutsideClicked(event) {
 
 <template>
   <div class="layout-wrapper" :class="containerClass">
-    <AppTopbar />
+    <AppTopbar :isAdminPanel="true" />
     <AdminSidebar />
     <div class="layout-main-container">
       <div class="layout-main">

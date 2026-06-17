@@ -11,11 +11,6 @@ const model = ref([
     label: 'Benutzerverwaltung',
     items: [
       { label: 'Alle Benutzer', icon: 'pi pi-fw pi-users', to: '/admin/users' },
-      {
-        label: 'Neuen Benutzer erstellen',
-        icon: 'pi pi-fw pi-user-plus',
-        to: '/admin/users/create',
-      },
     ],
   },
   {

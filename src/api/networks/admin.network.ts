@@ -4,7 +4,9 @@ import { getParamsFromPath, getPathWithParams, convertParamsToURL } from '@/help
 const ADMIN_ENDPOINTS = {
   pageableUsers: '/admin/users',
   userById: '/admin/users/:id',
+  createUser: '/admin/users',
   deleteUser: '/admin/users/:id',
+  editUser: '/admin/users/:id',
   allRoles: '/admin/roles',
   allMovies: '/admin/movies',
   allSeries: '/admin/series',
@@ -25,6 +27,48 @@ const getPageableUsers = async (params?: any) => {
     }
     const response = await http.get(path)
     return response?.data
+  } catch (e) {
+    console.error(e)
+    return false
+  }
+}
+
+const createUser = async (body: any) => {
+  try {
+    const response = await http.post(ADMIN_ENDPOINTS.createUser, body)
+    return response
+  } catch (e) {
+    console.error(e)
+    return false
+  }
+}
+
+const deleteUser = async (id: number) => {
+  try {
+    let path = ADMIN_ENDPOINTS.deleteUser
+    if (getParamsFromPath(path)?.length) {
+      path = getPathWithParams(path, {
+        id: String(id),
+      })
+    }
+    const response = await http.delete(path)
+    return response
+  } catch (e) {
+    console.error(e)
+    return false
+  }
+}
+
+const editUser = async (id: number, body: any) => {
+  try {
+    let path = ADMIN_ENDPOINTS.editUser
+    if (getParamsFromPath(path)?.length) {
+      path = getPathWithParams(path, {
+        id: String(id),
+      })
+    }
+    const response = await http.put(path, body)
+    return response
   } catch (e) {
     console.error(e)
     return false
@@ -71,4 +115,4 @@ const getAllGames = async () => {
   }
 }
 
-export { getPageableUsers, getAllRoles, getAllMovies, getAllSeries, getAllGames }
+export { getPageableUsers, createUser, deleteUser, editUser, getAllRoles, getAllMovies, getAllSeries, getAllGames }
