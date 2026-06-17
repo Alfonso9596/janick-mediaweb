@@ -1,13 +1,18 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
-import { getPageableGames } from '@/api/networks/games.network'
+import { computed, reactive, ref, watch } from 'vue'
+import { getPageableGames, getAllGenres, getAllPlatforms, createNewGame } from '@/api/networks/games.network'
+import { uploadNewPoster } from '@/api/networks/files.network'
 import { useGameStore } from '@/stores/games.store'
-import { Column, DataTable } from 'primevue'
+import { Column, DataTable, FileUpload } from 'primevue'
 import { useRoute } from 'vue-router'
+import { zodResolver } from '@primevue/forms/resolvers/zod'
+import { z } from 'zod'
+import { useToast } from 'primevue/usetoast'
 import router from '@/router'
 
 const gameStore = useGameStore()
 const currentRoute = useRoute()
+const toast = useToast()
 
 const state = reactive<{
   gameList: any[]
@@ -18,7 +23,14 @@ const state = reactive<{
   totalRecords: number
   totalPages: number | undefined
   loading: boolean
-  search: string
+  searchName: string
+  searchGenre: string
+  searchPlatform: string
+  createDialogVisible: boolean
+  genreListLoading: boolean
+  genreList: any[]
+  platformListLoading: boolean
+  platformList: any[]
 }>({
   gameList: [],
   page: gameStore.gamesPage,
@@ -28,7 +40,42 @@ const state = reactive<{
   totalRecords: 0,
   totalPages: undefined,
   loading: false,
-  search: '',
+  searchName: '',
+  searchGenre: '',
+  searchPlatform: '',
+  createDialogVisible: false,
+  genreListLoading: false,
+  genreList: [],
+  platformListLoading: false,
+  platformList: [],
+})
+
+const defaultFormValues = reactive<{
+  name: string
+  description: string
+  year: number
+  genres: string[]
+}>({
+  name: '',
+  description: '',
+  year: 0,
+  genres: [],
+})
+
+const createFormValues = reactive<{
+  name: string
+  description: string
+  year: number
+  genres: string[]
+  platforms: string[]
+  posterFile: any
+}>({
+  name: '',
+  description: '',
+  year: 0,
+  genres: [],
+  platforms: [],
+  posterFile: null,
 })
 
 watch(
@@ -70,6 +117,27 @@ watch(
   },
 )
 
+watch(
+  () => state.searchName,
+  () => {
+    fetchGames()
+  },
+)
+
+watch(
+  () => state.searchGenre,
+  () => {
+    fetchGames()
+  },
+)
+
+watch(
+  () => state.searchPlatform,
+  () => {
+    fetchGames()
+  },
+)
+
 const headers = computed(() => [
   {
     key: 'posterFilepath',
@@ -87,7 +155,8 @@ const headers = computed(() => [
   },
   {
     key: 'year',
-    title: 'Jahr',
+    title: 'Erscheinungsjahr',
+    sortable: true,
   },
   {
     key: 'ratingValue',
@@ -95,7 +164,7 @@ const headers = computed(() => [
   },
 ])
 
-const fetchGames = async (name?: string) => {
+const fetchGames = async () => {
   state.loading = true
 
   const params = {
@@ -104,11 +173,9 @@ const fetchGames = async (name?: string) => {
     sortBy: state.sortBy,
     sortDir: state.sortDir,
     ...currentRoute.query,
-    name: '',
-  }
-
-  if (name) {
-    params.name = name
+    name: state.searchName ? state.searchName : '',
+    genre: state.searchGenre ? state.searchGenre : '',
+    platform: state.searchPlatform ? state.searchPlatform : '',
   }
 
   const response = await getPageableGames(params)
@@ -119,6 +186,20 @@ const fetchGames = async (name?: string) => {
   state.loading = false
 }
 
+const fetchGenreList = async () => {
+  state.genreListLoading = true
+  const response = await getAllGenres()
+  state.genreList = response
+  state.genreListLoading = false
+}
+
+const fetchPlatformList = async () => {
+  state.platformListLoading = true
+  const response = await getAllPlatforms()
+  state.platformList = response
+  state.platformListLoading = false
+}
+
 const capDescription = (value: string) => {
   return value ? value.substring(0, 100) + '...' : ''
 }
@@ -127,11 +208,96 @@ const goToGamePage = (game: any) => {
   router.push('/games/' + game.id)
 }
 
-const clearSearch = () => {
-  state.search = ''
-  fetchGames()
+const resolver = ref(
+  zodResolver(
+    z.object({
+      name: z.string().min(1, 'Name ist erforderlich'),
+      year: z.union([
+        z
+          .number()
+          .gt(1958, {
+            message: "Das älteste Spiel ist 'Tennis for Two' aus dem Jahr 1958.",
+          })
+          .lt(new Date().getFullYear() + 1, {
+            message: 'Filme aus der Zukunft werden nicht akzeptiert.',
+          }),
+        z.literal(null),
+      ]),
+    }),
+  ),
+)
+
+const onCreateFormSubmit = async (e) => {
+  if (e.valid) {
+    if (createFormValues.posterFile !== null) {
+      const posterResponse = await uploadNewPoster(
+        createFormValues.posterFile,
+        'GAME',
+        createFormValues.name,
+        String(createFormValues.year),
+      )
+
+      if (!posterResponse) {
+        console.error('Failed image upload')
+        useToast().add({
+          severity: 'error',
+          summary: 'Ein Poster für \"' + createFormValues.name + '\" konnte nicht hochgeladen werden.',
+          life: 5000,
+        })
+        return
+      }
+    }
+
+    const gameResponse = await createNewGame(createFormValues)
+
+    if (!gameResponse) {
+      if (createFormValues.posterFile !== null) {
+        console.log('Failed game upload, Poster succeeded')
+        toast.add({
+          severity: 'error',
+          summary: 'Das Bild wurde hochgeladen, aber das Spiel wurde nicht gespeichert',
+          life: 5000,
+        })
+        return
+      } else {
+        console.log('Failed game upload')
+        toast.add({
+          severity: 'error',
+          summary: 'Das Spiel \"' + createFormValues.name + '\" existiert bereits',
+          life: 5000,
+        })
+        return
+      }
+    }
+    toast.add({
+      severity: 'success',
+      summary: 'Das Spiel \"' + createFormValues.name + '\" wurde gespeichert',
+      life: 3000,
+    })
+    state.createDialogVisible = false
+    fetchGames()
+    fetchGenreList()
+  }
 }
 
+const clearCreateDialogForm = () => {
+  createFormValues.name = defaultFormValues.name
+  createFormValues.description = defaultFormValues.description
+  createFormValues.year = defaultFormValues.year
+  createFormValues.genres = defaultFormValues.genres
+  createFormValues.posterFile = null
+}
+
+function onPosterSelect(event) {
+  createFormValues.posterFile = event.files[0]
+}
+
+function onPosterRemove() {
+  createFormValues.posterFile = null
+}
+
+fetchGenreList()
+fetchPlatformList()
 fetchGames()
 </script>
 
@@ -156,17 +322,40 @@ fetchGames()
     >
       <template #header>
         <div class="flex justify-end">
-          <Button type="button" label="Neu" icon="pi pi-plus" />
-          <IconField style="margin-left: 10px">
+          <Button @click="state.createDialogVisible = true" type="button" label="Neu" icon="pi pi-plus" />
+          <Select
+            v-model="state.searchGenre"
+            :options="state.genreList"
+            filter
+            optionLabel="name"
+            optionValue="name"
+            placeholder="Filtern nach Genre"
+            showClear
+            class="md:w-56 ml-2"
+            :loading="state.genreListLoading"
+            :disabled="state.genreListLoading"
+          />
+          <Select
+            v-model="state.searchPlatform"
+            :options="state.platformList"
+            filter
+            optionLabel="name"
+            optionValue="name"
+            placeholder="Filtern nach Plattform"
+            showClear
+            class="md:w-56 ml-2"
+            :loading="state.platformListLoading"
+            :disabled="state.platformListLoading"
+          />
+          <IconField class="ml-2">
             <InputIcon>
               <i class="pi pi-search" />
             </InputIcon>
             <InputText
-              v-model="state.search"
+              v-model="state.searchName"
               placeholder="Suche..."
-              @input="fetchGames(state.search)"
             />
-            <InputIcon class="pi pi-times" style="cursor: pointer" @click="clearSearch()" />
+            <InputIcon class="pi pi-times" style="cursor: pointer" @click="state.searchName = ''" />
           </IconField>
         </div>
       </template>
@@ -203,5 +392,172 @@ fetchGames()
         </template>
       </Column>
     </DataTable>
+
+    <!-- CREATE GAME FORM DIALOG -->
+    <Dialog
+      @afterHide="clearCreateDialogForm"
+      v-model:visible="state.createDialogVisible"
+      modal
+      header="Neues Spiel einfügen"
+      :style="{ width: '32rem' }"
+    >
+      <Form
+        v-slot="$createForm"
+        :resolver="resolver"
+        :initialValues="defaultFormValues"
+        @submit="onCreateFormSubmit"
+        class="formgrid grid"
+      >
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <InputText
+              v-model="createFormValues.name"
+              name="name"
+              class="flex-auto"
+              autocomplete="off"
+            />
+            <Message
+              v-if="$createForm.name?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $createForm.name.error?.message }}</Message>
+              <label for="name">Name</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <InputNumber
+              v-model="createFormValues.year"
+              name="year"
+              class="flex-auto"
+              :useGrouping="false"
+            />
+            <Message
+              v-if="$createForm.year?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $createForm.year.error?.message }}</Message
+            >
+            <label for="year">Erscheinungsjahr</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12">
+          <FloatLabel variant="in">
+            <Textarea
+              v-model="createFormValues.description"
+              name="description"
+              class="w-full"
+              rows="5"
+              style="resize: none"
+            />
+            <label for="description">Beschreibung</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <MultiSelect
+              v-model="createFormValues.genres"
+              name="genres"
+              fluid
+              display="chip"
+              :options="state.genreList"
+              optionLabel="name"
+              optionValue="name"
+              filter
+              placeholder="Genre auswählen"
+              :maxSelectedLabels="2"
+              selectedItemsLabel="{0} Genres ausgewählt"
+              :loading="state.genreListLoading"
+              :disabled="state.genreListLoading"
+            />
+            <label for="genres">Genres</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <MultiSelect
+              v-model="createFormValues.platforms"
+              name="platforms"
+              fluid
+              display="chip"
+              :options="state.platformList"
+              optionLabel="name"
+              optionValue="name"
+              filter
+              placeholder="Plattform auswählen"
+              :maxSelectedLabels="2"
+              selectedItemsLabel="{0} Plattformen ausgewählt"
+              :loading="state.platformListLoading"
+              :disabled="state.platformListLoading"
+            />
+            <label for="platforms">Plattformen</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12">
+          <FileUpload
+            @select="onPosterSelect"
+            @clear="onPosterRemove"
+            customUpload
+            name="posterFilepath"
+            accept="image/*"
+            :fileLimit="1"
+          >
+            <template #header="{ chooseCallback, clearCallback, files }">
+              <div class="flex flex-wrap justify-between items-center flex-1 gap-4">
+                <div class="flex gap-2">
+                  <Button
+                    @click="chooseCallback()"
+                    icon="pi pi-cloud-upload"
+                    rounded
+                    variant="outlined"
+                    severity="success"
+                    :disabled="files.length > 0"
+                  />
+                  <Button
+                    @click="clearCallback()"
+                    icon="pi pi-times"
+                    rounded
+                    variant="outlined"
+                    severity="danger"
+                    :disabled="!files || files.length === 0"
+                  />
+                </div>
+              </div>
+            </template>
+            <template #content="{ files }">
+              <div class="flex flex-row gap-8">
+                <div v-if="files.length > 0">
+                  <div class="flex flex-wrap gap-4">
+                    <div>
+                      <img
+                        role="presentation"
+                        :alt="files[0]?.name"
+                        :src="files[0]?.objectURL"
+                        width="80"
+                        height="40"
+                      />
+                    </div>
+                    <span
+                      class="font-semibold text-ellipsis max-w-60 whitespace-nowrap overflow-hidden"
+                      >{{ files[0]?.name }}</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </template>
+            <template #empty>
+              <div class="flex items-center justify-center flex-col">
+                <i
+                  class="pi pi-cloud-upload !border-2 !rounded-full !p-4 !text-4xl !text-muted-color"
+                />
+                <p class="mt-6 mb-0">Bilddatei hierhin verschieben</p>
+              </div>
+            </template>
+          </FileUpload>
+        </div>
+      </Form>
+    </Dialog>
   </div>
 </template>

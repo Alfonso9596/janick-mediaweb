@@ -181,10 +181,8 @@ const fetchMovies = async () => {
 
 const fetchGenreList = async () => {
   state.genreListLoading = true
-
   const response = await getAllGenres()
   state.genreList = response
-
   state.genreListLoading = false
 }
 
@@ -233,7 +231,7 @@ const onCreateFormSubmit = async (e) => {
         console.error('Failed image upload')
         toast.add({
           severity: 'error',
-          summary: 'Ein Poster für \"' + createFormValues.name + '\" existiert bereits',
+          summary: 'Ein Poster für \"' + createFormValues.name + '\" konnte nicht hochgeladen werden.',
           life: 5000,
         })
         return

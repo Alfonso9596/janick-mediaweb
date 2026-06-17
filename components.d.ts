@@ -15,6 +15,7 @@ declare module 'vue' {
     Button: typeof import('primevue/button')['default']
     Chart: typeof import('primevue/chart')['default']
     Checkbox: typeof import('primevue/checkbox')['default']
+    Chip: typeof import('primevue/chip')['default']
     Column: typeof import('primevue/column')['default']
     ConfigSidebarComponent: typeof import('./src/components/ConfigSidebarComponent.vue')['default']
     Dialog: typeof import('primevue/dialog')['default']
@@ -43,6 +44,8 @@ declare module 'vue' {
     Textarea: typeof import('primevue/textarea')['default']
     Toast: typeof import('primevue/toast')['default']
     TopbarComponent: typeof import('./src/components/TopbarComponent.vue')['default']
+    TreeStructure: typeof import('./src/components/TreeStructure.vue')['default']
+    TreeTable: typeof import('primevue/treetable')['default']
   }
   export interface GlobalDirectives {
     Ripple: typeof import('primevue/ripple')['default']

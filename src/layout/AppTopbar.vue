@@ -196,7 +196,7 @@ function onDarkThemeChange() {
           </g>
         </svg>
 
-        <span>Janick's MediaDB{{ isAdminPanel ? ' (ADMIN)' : ''}}</span>
+        <span>Janick's MediaDB{{ props.isAdminPanel ? ' (ADMIN)' : ''}}</span>
       </router-link>
     </div>
 

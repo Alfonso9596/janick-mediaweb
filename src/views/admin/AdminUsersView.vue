@@ -346,9 +346,7 @@ fetchRoleList()
               :style="{
                 background: data[header.key] ? `var(--p-green-700)` : `var(--p-red-700)`,
                 color: '#FFFFFF',
-                cursor: 'pointer',
               }"
-              v-tooltip.top="data[header.key] ? 'Deaktivieren' : 'Aktivieren'"
             >
               <template #icon>
                 <i :class="data[header.key] ? 'pi pi-check' : 'pi pi-times'" />
