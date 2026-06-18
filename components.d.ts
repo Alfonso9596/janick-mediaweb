@@ -18,6 +18,7 @@ declare module 'vue' {
     Chip: typeof import('primevue/chip')['default']
     Column: typeof import('primevue/column')['default']
     ConfigSidebarComponent: typeof import('./src/components/ConfigSidebarComponent.vue')['default']
+    ContextMenu: typeof import('primevue/contextmenu')['default']
     Dialog: typeof import('primevue/dialog')['default']
     Divider: typeof import('primevue/divider')['default']
     FileUpload: typeof import('primevue/fileupload')['default']

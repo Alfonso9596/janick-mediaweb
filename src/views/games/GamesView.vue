@@ -3,7 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { getPageableGames, getAllGenres, getAllPlatforms, createNewGame } from '@/api/networks/games.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useGameStore } from '@/stores/games.store'
-import { Column, DataTable, FileUpload, type FileUploadSelectEvent } from 'primevue'
+import { Column, ContextMenu, DataTable, FileUpload, type DataTableRowClickEvent, type DataTableRowContextMenuEvent, type FileUploadSelectEvent } from 'primevue'
 import { useRoute } from 'vue-router'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
@@ -14,6 +14,7 @@ import type { Game, Genre, Platform } from '@/types/common'
 const gameStore = useGameStore()
 const currentRoute = useRoute()
 const toast = useToast()
+const cm = ref()
 
 const state = reactive<{
   gameList: Game[]
@@ -32,6 +33,7 @@ const state = reactive<{
   genreList: Genre[]
   platformListLoading: boolean
   platformList: Platform[]
+  selectedContextGame: Game | null
 }>({
   gameList: [],
   page: gameStore.gamesPage,
@@ -49,6 +51,7 @@ const state = reactive<{
   genreList: [],
   platformListLoading: false,
   platformList: [],
+  selectedContextGame: null
 })
 
 const defaultFormValues = reactive<{
@@ -165,6 +168,22 @@ const headers = computed(() => [
   },
 ])
 
+const contextMenuModel = ref([
+  {
+    label: 'Bearbeiten',
+    icon: 'pi pi-pencil'
+  }
+])
+
+const onRowContextMenu = (event: DataTableRowContextMenuEvent) => {
+  state.selectedContextGame = event.data
+  cm.value.show(event.originalEvent)
+}
+
+const onRowClick = (event: DataTableRowClickEvent) => {
+  goToGamePage(event.data.id)
+}
+
 const fetchGames = async () => {
   state.loading = true
 
@@ -205,8 +224,8 @@ const capDescription = (value: string) => {
   return value ? value.substring(0, 100) + '...' : ''
 }
 
-const goToGamePage = (game: Game) => {
-  router.push('/games/' + game.id)
+const goToGamePage = (id: number) => {
+  router.push('/games/' + id)
 }
 
 const resolver = ref(
@@ -305,6 +324,14 @@ fetchGames()
 <template>
   <div class="card">
     <div class="font-semibold text-xl mb-4">Spiele</div>
+    <ContextMenu ref="cm" :model="contextMenuModel" @hide="state.selectedContextGame = null">
+      <template #item="{ item, props }">
+        <a class="flex items-center" v-bind="props.action">
+          <span :class="item.icon" />
+          <span class="ml-2">{{ item.label }}</span>
+        </a>
+      </template>
+    </ContextMenu>
     <DataTable
       lazy
       :value="state.gameList"
@@ -319,6 +346,11 @@ fetchGames()
       :first="state.page * state.pageSize"
       :sortField="state.sortBy"
       :sortOrder="state.sortDir === 'asc' ? 1 : -1"
+      contextMenu
+      selectionMode="single"
+      :contextMenuSelection="state.selectedContextGame"
+      @rowContextmenu="onRowContextMenu"
+      @rowClick="onRowClick"
       @page="state.page = $event.page"
       @update:rows="state.pageSize = $event"
       @update:sortField="state.sortBy = $event"
@@ -382,18 +414,6 @@ fetchGames()
             capDescription(data[header.key])
           }}</span>
           <span v-else>{{ data[header.key] }}</span>
-        </template>
-      </Column>
-      <Column class="w-24 text-end!">
-        <template #body="{ data }">
-          <Button
-            icon="pi pi-info-circle"
-            outline
-            rounded
-            class="mr-2"
-            severity="info"
-            @click="goToGamePage(data)"
-          />
         </template>
       </Column>
     </DataTable>

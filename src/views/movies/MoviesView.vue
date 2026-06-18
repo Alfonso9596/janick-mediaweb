@@ -1,19 +1,22 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { getPageableMovies, getAllGenres, createNewMovie } from '@/api/networks/movies.network'
+import { getPageableMovies, getAllGenres, createNewMovie, editMovie } from '@/api/networks/movies.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useMovieStore } from '@/stores/movies.store'
-import { Column, DataTable, FileUpload, type FileUploadSelectEvent } from 'primevue'
+import { Column, ContextMenu, DataTable, FileUpload, type DataTableRowClickEvent, type DataTableRowContextMenuEvent, type FileUploadSelectEvent } from 'primevue'
 import { useRoute } from 'vue-router'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import router from '@/router'
 import type { Movie, Genre } from '@/types/common'
+import { useAuthStore } from '@/stores/auth.store'
 
 const movieStore = useMovieStore()
+const authStore = useAuthStore()
 const currentRoute = useRoute()
 const toast = useToast()
+const cm = ref()
 
 const state = reactive<{
   movieList: Movie[]
@@ -29,6 +32,9 @@ const state = reactive<{
   createDialogVisible: boolean
   genreListLoading: boolean
   genreList: Genre[]
+  editDialogVisible: boolean
+  editDialogMovieId: number
+  selectedContextMovie: Movie | null
 }>({
   movieList: [],
   page: movieStore.moviesPage,
@@ -43,6 +49,9 @@ const state = reactive<{
   createDialogVisible: false,
   genreListLoading: false,
   genreList: [],
+  editDialogVisible: false,
+  editDialogMovieId: 0,
+  selectedContextMovie: null
 })
 
 const defaultFormValues = reactive<{
@@ -73,6 +82,20 @@ const createFormValues = reactive<{
   length: 0,
   genres: [],
   posterFile: null,
+})
+
+const editFormValues = reactive<{
+  name: string
+  description: string
+  year: number
+  length: number
+  genres: string[]
+}>({
+  name: '',
+  description: '',
+  year: 0,
+  length: 0,
+  genres: [],
 })
 
 watch(
@@ -159,6 +182,30 @@ const headers = computed(() => [
   },
 ])
 
+const contextMenuModel = ref([
+  {
+    label: 'Bearbeiten',
+    icon: 'pi pi-pencil',
+    disabled: () => {
+      return (authStore.decodedToken?.sub !== state.selectedContextMovie?.user.username) &&
+        (!authStore.roles?.includes('ADMIN'))
+    },
+    command: () => {
+      if (state.selectedContextMovie == null) return
+      showEditDialog(state.selectedContextMovie)
+    }
+  }
+])
+
+const onRowContextMenu = (event: DataTableRowContextMenuEvent) => {
+  state.selectedContextMovie = event.data
+  cm.value.show(event.originalEvent)
+}
+
+const onRowClick = (event: DataTableRowClickEvent) => {
+  goToMoviePage(event.data.id)
+}
+
 const fetchMovies = async () => {
   state.loading = true
 
@@ -191,8 +238,8 @@ const capDescription = (value: string) => {
   return value ? value.substring(0, 100) + '...' : ''
 }
 
-const goToMoviePage = (movie: Movie) => {
-  router.push('/movies/' + movie.id)
+const goToMoviePage = (id: number) => {
+  router.push('/movies/' + id)
 }
 
 const resolver = ref(
@@ -271,6 +318,28 @@ const onCreateFormSubmit = async (e: { valid: boolean }) => {
   }
 }
 
+const onEditFormSubmit = async () => {
+  const editMovieResponse = await editMovie(state.editDialogMovieId, editFormValues)
+
+  if (editMovieResponse === false) {
+    console.log('Failed movie edit')
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler beim Bearbeiten des Films "' + editFormValues.name + '"',
+      life: 5000
+    })
+  } else {
+    toast.add({
+      severity: 'success',
+      summary: 'Film "' + editFormValues.name + '" erfolgreich bearbeitet',
+      life: 3000
+    })
+  }
+
+  state.editDialogVisible = false
+  fetchMovies()
+}
+
 const clearCreateDialogForm = () => {
   createFormValues.name = defaultFormValues.name
   createFormValues.description = defaultFormValues.description
@@ -278,6 +347,26 @@ const clearCreateDialogForm = () => {
   createFormValues.length = defaultFormValues.length
   createFormValues.genres = defaultFormValues.genres
   createFormValues.posterFile = null
+}
+
+const showEditDialog = (movie: Movie) => {
+  state.editDialogMovieId = Number.parseInt(String(movie.id), 10)
+  editFormValues.name = movie.name
+  editFormValues.description = movie.description ?? ''
+  editFormValues.year = movie.year
+  editFormValues.length = movie.length ?? 0
+  editFormValues.genres = movie.genres ?? []
+  state.editDialogVisible = true
+}
+
+const clearEditDialogForm = () => {
+  state.editDialogVisible = false
+
+  editFormValues.name = ''
+  editFormValues.description = ''
+  editFormValues.year = 0
+  editFormValues.length = 0
+  editFormValues.genres = []
 }
 
 function onPosterSelect(event: FileUploadSelectEvent) {
@@ -295,6 +384,14 @@ fetchMovies()
 <template>
   <div class="card">
     <div class="font-semibold text-xl mb-4">Filme</div>
+    <ContextMenu ref="cm" :model="contextMenuModel" @hide="state.selectedContextMovie = null">
+      <template #item="{ item, props }">
+        <a class="flex items-center" v-bind="props.action">
+          <span :class="item.icon" />
+          <span class="ml-2">{{ item.label }}</span>
+        </a>
+      </template>
+    </ContextMenu>
     <DataTable
       lazy
       :value="state.movieList"
@@ -309,6 +406,11 @@ fetchMovies()
       :first="state.page * state.pageSize"
       :sortField="state.sortBy"
       :sortOrder="state.sortDir === 'asc' ? 1 : -1"
+      contextMenu
+      selectionMode="single"
+      :contextMenuSelection="state.selectedContextMovie"
+      @rowContextmenu="onRowContextMenu"
+      @rowClick="onRowClick"
       @page="state.page = $event.page"
       @update:rows="state.pageSize = $event"
       @update:sortField="state.sortBy = $event"
@@ -362,18 +464,6 @@ fetchMovies()
             capDescription(data[header.key])
           }}</span>
           <span v-else>{{ data[header.key] }}</span>
-        </template>
-      </Column>
-      <Column class="w-24 text-end!">
-        <template #body="{ data }">
-          <Button
-            icon="pi pi-info-circle"
-            outline
-            rounded
-            class="mr-2"
-            severity="info"
-            @click="goToMoviePage(data)"
-          />
         </template>
       </Column>
     </DataTable>
@@ -540,6 +630,112 @@ fetchMovies()
               </div>
             </template>
           </FileUpload>
+        </div>
+        <div class="field col-6">
+          <Button type="submit" severity="success" label="Bestätigen" />
+        </div>
+      </Form>
+    </Dialog>
+
+    <!-- EDIT MOVIE FORM DIALOG -->
+     <Dialog
+      @afterHide="clearEditDialogForm"
+      v-model:visible="state.editDialogVisible"
+      modal
+      header="Film bearbeiten"
+      :style="{ width: '32rem' }"
+    >
+      <Form
+        v-slot="$editForm"
+        :resolver="resolver"
+        @submit="onEditFormSubmit"
+        class="formgrid grid"
+      >
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <InputText
+              v-model="editFormValues.name"
+              name="name"
+              class="flex-auto"
+              autocomplete="off"
+            />
+            <Message
+              v-if="$editForm.name?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $editForm.name.error?.message }}</Message
+            >
+            <label for="name">Name</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <InputNumber
+              v-model="editFormValues.year"
+              name="year"
+              class="flex-auto"
+              :useGrouping="false"
+            />
+            <Message
+              v-if="$editForm.year?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $editForm.year.error?.message }}</Message
+            >
+            <label for="year">Erscheinungsjahr</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12">
+          <FloatLabel variant="in">
+            <Textarea
+              v-model="editFormValues.description"
+              name="description"
+              class="w-full"
+              rows="5"
+              style="resize: none"
+            />
+            <label for="description">Beschreibung</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <InputNumber
+              v-model="editFormValues.length"
+              name="length"
+              class="w-full"
+              :useGrouping="false"
+            />
+            <Message
+              v-if="$editForm.length?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $editForm.length.error?.message }}</Message
+            >
+            <label for="length">Länge (Min.)</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <MultiSelect
+              v-model="editFormValues.genres"
+              name="genres"
+              fluid
+              display="chip"
+              :options="state.genreList"
+              optionLabel="name"
+              optionValue="name"
+              filter
+              placeholder="Genre auswählen"
+              :maxSelectedLabels="2"
+              selectedItemsLabel="{0} Genres ausgewählt"
+              :loading="state.genreListLoading"
+              :disabled="state.genreListLoading"
+            />
+            <label for="genres">Genres</label>
+          </FloatLabel>
         </div>
         <div class="field col-6">
           <Button type="submit" severity="success" label="Bestätigen" />

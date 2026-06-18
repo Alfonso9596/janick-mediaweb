@@ -4,7 +4,7 @@ import { getPageableSeries, createNewSeries } from '@/api/networks/series.networ
 import { getAllGenres } from '@/api/networks/movies.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useSeriesStore } from '@/stores/series.store'
-import { Column, DataTable, type FileUploadSelectEvent } from 'primevue'
+import { Column, ContextMenu, DataTable, FileUpload, type DataTableRowClickEvent, type DataTableRowContextMenuEvent, type FileUploadSelectEvent } from 'primevue'
 import { useRoute } from 'vue-router'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
@@ -15,6 +15,7 @@ import type { Series, Genre } from '@/types/common'
 const seriesStore = useSeriesStore()
 const currentRoute = useRoute()
 const toast = useToast()
+const cm = ref()
 
 const state = reactive<{
   seriesList: Series[]
@@ -30,6 +31,7 @@ const state = reactive<{
   createDialogVisible: boolean
   genreListLoading: boolean
   genreList: Genre[]
+  selectedContextSeries: Series | null
 }>({
   seriesList: [],
   page: seriesStore.seriesPage,
@@ -44,6 +46,7 @@ const state = reactive<{
   createDialogVisible: false,
   genreListLoading: false,
   genreList: [],
+  selectedContextSeries: null
 })
 
 const defaultFormValues = reactive<{
@@ -159,6 +162,22 @@ const headers = computed(() => [
   },
 ])
 
+const contextMenuModel = ref([
+  {
+    label: 'Bearbeiten',
+    icon: 'pi pi-pencil'
+  }
+])
+
+const onRowContextMenu = (event: DataTableRowContextMenuEvent) => {
+  state.selectedContextSeries = event.data
+  cm.value.show(event.originalEvent)
+}
+
+const onRowClick = (event: DataTableRowClickEvent) => {
+  goToSeriesPage(event.data.id)
+}
+
 const fetchSeries = async () => {
   state.loading = true
 
@@ -191,8 +210,8 @@ const capDescription = (value: string) => {
   return value ? value.substring(0, 100) + '...' : ''
 }
 
-const goToSeriesPage = (series: Series) => {
-  router.push('/series/' + series.id)
+const goToSeriesPage = (id: number) => {
+  router.push('/series/' + id)
 }
 
 const resolver = ref(
@@ -296,6 +315,14 @@ fetchSeries()
 <template>
   <div class="card">
     <div class="font-semibold text-xl mb-4">Serien</div>
+    <ContextMenu ref="cm" :model="contextMenuModel" @hide="state.selectedContextSeries = null">
+      <template #item="{ item, props }">
+        <a class="flex items-center" v-bind="props.action">
+          <span :class="item.icon" />
+          <span class="ml-2">{{ item.label }}</span>
+        </a>
+      </template>
+    </ContextMenu>
     <DataTable
       lazy
       :value="state.seriesList"
@@ -310,6 +337,11 @@ fetchSeries()
       :first="state.page * state.pageSize"
       :sortField="state.sortBy"
       :sortOrder="state.sortDir === 'asc' ? 1 : -1"
+      contextMenu
+      selectionMode="single"
+      :contextMenuSelection="state.selectedContextSeries"
+      @rowContextmenu="onRowContextMenu"
+      @rowClick="onRowClick"
       @page="state.page = $event.page"
       @update:rows="state.pageSize = $event"
       @update:sortField="state.sortBy = $event"
@@ -363,18 +395,6 @@ fetchSeries()
             capDescription(data[header.key])
           }}</span>
           <span v-else>{{ data[header.key] }}</span>
-        </template>
-      </Column>
-      <Column class="w-24 text-end!">
-        <template #body="{ data }">
-          <Button
-            icon="pi pi-info-circle"
-            outline
-            rounded
-            class="mr-2"
-            severity="info"
-            @click="goToSeriesPage(data)"
-          />
         </template>
       </Column>
     </DataTable>

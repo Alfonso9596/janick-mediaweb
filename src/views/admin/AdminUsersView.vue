@@ -2,6 +2,7 @@
 import {
   Chip,
   Column,
+  ContextMenu,
   DataTable,
   FloatLabel,
   IconField,
@@ -9,6 +10,7 @@ import {
   InputText,
   Message,
   MultiSelect,
+  type DataTableRowContextMenuEvent
 } from 'primevue'
 import { getAllRoles, getPageableUsers, createUser, deleteUser, editUser } from '@/api/networks/admin.network'
 import { useAuthStore } from '@/stores/auth.store'
@@ -19,8 +21,8 @@ import { useToast } from 'primevue/usetoast'
 import type { User, Role } from '@/types/common'
 
 const toast = useToast()
-
 const authStore = useAuthStore()
+const cm = ref()
 
 const state = reactive<{
   userList: User[]
@@ -41,6 +43,7 @@ const state = reactive<{
   deleteDialogVisible: boolean
   deleteDialogUsername: string
   deleteDialogUserId: number
+  selectedContextUser: User | null
 }>({
   userList: [],
   totalRecrods: 0,
@@ -60,6 +63,7 @@ const state = reactive<{
   deleteDialogVisible: false,
   deleteDialogUsername: '',
   deleteDialogUserId: 0,
+  selectedContextUser: null
 })
 
 const headers = computed(() => [
@@ -81,6 +85,36 @@ const headers = computed(() => [
     type: 'boolean',
   },
 ])
+
+const contextMenuModel = ref([
+  {
+    label: 'Bearbeiten',
+    icon: 'pi pi-pencil',
+    disabled: () => authStore.decodedToken?.sub === state.selectedContextUser?.username,
+    command: () => {
+      if (state.selectedContextUser == null) return
+      showEditUserDialog(state.selectedContextUser)
+    }
+  },
+  {
+    separator: true
+  },
+  {
+    label: 'Löschen',
+    icon: 'pi pi-trash',
+    disabled: () => authStore.decodedToken?.sub === state.selectedContextUser?.username,
+    color: '#c73c3c',
+    command: () => {
+      if (state.selectedContextUser == null) return
+      showDeleteUserDialog(state.selectedContextUser)
+    }
+  }
+])
+
+const onRowContextMenu = (event: DataTableRowContextMenuEvent) => {
+  state.selectedContextUser = event.data
+  cm.value.show(event.originalEvent)
+}
 
 const createUserInitialValues = reactive<{
   username: string
@@ -290,6 +324,14 @@ fetchRoleList()
 <template>
   <div class="card">
     <div class="font-semibold text-xl mb-4">Benutzerübersicht</div>
+    <ContextMenu ref="cm" :model="contextMenuModel" @hide="state.selectedContextUser = null">
+      <template #item="{ item, props }">
+        <a class="flex items-center" v-bind="props.action" :style="{ 'background-color': item.color, 'border-radius': '2px' }">
+          <span :class="item.icon" />
+          <span class="ml-2">{{ item.label }}</span>
+        </a>
+      </template>
+    </ContextMenu>
     <DataTable
       lazy
       :value="state.userList"
@@ -304,6 +346,9 @@ fetchRoleList()
       :first="state.page * state.pageSize"
       :sortField="state.sortBy"
       :sortOrder="state.sortDir === 'asc' ? 1 : -1"
+      contextMenu
+      :contextMenuSelection="state.selectedContextUser"
+      @rowContextmenu="onRowContextMenu"
       @page="state.page = $event.page"
       @update:rows="state.pageSize = $event"
       @update:sortFields="state.sortBy = $event"
@@ -357,29 +402,6 @@ fetchRoleList()
             </Chip>
           </div>
           <span v-else>{{ data[header.key] }}</span>
-        </template>
-      </Column>
-      <Column class="w-40 text-end!">
-        <template #body="{ data }">
-          <Button
-            icon="pi pi-pencil"
-            variant="outlined"
-            :severity="authStore.decodedToken?.sub === data.username ? 'secondary' : 'primary'"
-            rounded
-            :disabled="authStore.decodedToken?.sub === data.username"
-            class="mr-2"
-            v-tooltip.top="'Bearbeiten'"
-            @click="showEditUserDialog(data)"
-          />
-          <Button
-            icon="pi pi-trash"
-            variant="outlined"
-            :severity="authStore.decodedToken?.sub === data.username ? 'secondary' : 'danger'"
-            rounded
-            :disabled="authStore.decodedToken?.sub === data.username"
-            v-tooltip.top="'Löschen'"
-            @click="showDeleteUserDialog(data)"
-          />
         </template>
       </Column>
     </DataTable>

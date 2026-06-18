@@ -7,6 +7,7 @@ const MOVIES_ENDPOINTS = {
   movieById: '/movies/:id',
   allGenres: '/genres/movies',
   createMovie: '/movies',
+  editMovie: '/movies/:id',
   movieFiles: '/movies/:id/files',
   addRating: '/movies/rating',
 }
@@ -65,6 +66,22 @@ const createNewMovie = async (body: MovieInput) => {
   }
 }
 
+const editMovie = async (id: number, body: MovieInput) => {
+  try {
+    let path = MOVIES_ENDPOINTS.editMovie
+    if (getParamsFromPath(path)?.length) {
+      path = getPathWithParams(path, {
+        id: String(id),
+      })
+    }
+    const response = await http.put(path, body)
+    return response
+  } catch (e) {
+    console.error(e)
+    return false
+  }
+}
+
 const getMovieFiles = async (id: string) => {
   try {
     let path = MOVIES_ENDPOINTS.movieFiles
@@ -99,6 +116,7 @@ export {
   getMovieById,
   getAllGenres,
   createNewMovie,
+  editMovie,
   getMovieFiles,
   addRating,
   MOVIES_ENDPOINTS,
