@@ -3,19 +3,20 @@ import { computed, reactive, ref, watch } from 'vue'
 import { getPageableMovies, getAllGenres, createNewMovie } from '@/api/networks/movies.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useMovieStore } from '@/stores/movies.store'
-import { Column, DataTable, FileUpload } from 'primevue'
+import { Column, DataTable, FileUpload, type FileUploadSelectEvent } from 'primevue'
 import { useRoute } from 'vue-router'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import router from '@/router'
+import type { Movie, Genre } from '@/types/common'
 
 const movieStore = useMovieStore()
 const currentRoute = useRoute()
 const toast = useToast()
 
 const state = reactive<{
-  movieList: any[]
+  movieList: Movie[]
   page: number
   pageSize: number
   sortBy: string
@@ -27,7 +28,7 @@ const state = reactive<{
   searchGenre: string
   createDialogVisible: boolean
   genreListLoading: boolean
-  genreList: any[]
+  genreList: Genre[]
 }>({
   movieList: [],
   page: movieStore.moviesPage,
@@ -64,7 +65,7 @@ const createFormValues = reactive<{
   year: number
   length: number
   genres: string[]
-  posterFile: any
+  posterFile: File | null
 }>({
   name: '',
   description: '',
@@ -162,8 +163,8 @@ const fetchMovies = async () => {
   state.loading = true
 
   const params = {
-    pageSize: state.pageSize,
-    page: state.page,
+    pageSize: String(state.pageSize),
+    page: String(state.page),
     sortBy: state.sortBy,
     sortDir: state.sortDir,
     ...currentRoute.query,
@@ -190,7 +191,7 @@ const capDescription = (value: string) => {
   return value ? value.substring(0, 100) + '...' : ''
 }
 
-const goToMoviePage = (movie: any) => {
+const goToMoviePage = (movie: Movie) => {
   router.push('/movies/' + movie.id)
 }
 
@@ -217,7 +218,7 @@ const resolver = ref(
   ),
 )
 
-const onCreateFormSubmit = async (e) => {
+const onCreateFormSubmit = async (e: { valid: boolean }) => {
   if (e.valid) {
     if (createFormValues.posterFile !== null) {
       const posterResponse = await uploadNewPoster(
@@ -231,7 +232,7 @@ const onCreateFormSubmit = async (e) => {
         console.error('Failed image upload')
         toast.add({
           severity: 'error',
-          summary: 'Ein Poster für \"' + createFormValues.name + '\" konnte nicht hochgeladen werden.',
+          summary: 'Ein Poster für "' + createFormValues.name + '" konnte nicht hochgeladen werden.',
           life: 5000,
         })
         return
@@ -241,7 +242,7 @@ const onCreateFormSubmit = async (e) => {
     const movieResponse = await createNewMovie(createFormValues)
 
     if (!movieResponse) {
-      if (createFormValues.posterFile !== null) {
+      if (createFormValues.posterFile) {
         console.log('Failed movie upload, Poster succeeded')
         toast.add({
           severity: 'error',
@@ -253,7 +254,7 @@ const onCreateFormSubmit = async (e) => {
         console.log('Failed movie upload')
         toast.add({
           severity: 'error',
-          summary: 'Der Film \"' + createFormValues.name + '\" existiert bereits',
+          summary: 'Der Film "' + createFormValues.name + '" existiert bereits',
           life: 5000,
         })
         return
@@ -261,7 +262,7 @@ const onCreateFormSubmit = async (e) => {
     }
     toast.add({
       severity: 'success',
-      summary: 'Der Film \"' + createFormValues.name + '\" wurde gespeichert',
+      summary: 'Der Film "' + createFormValues.name + '" wurde gespeichert',
       life: 3000,
     })
     state.createDialogVisible = false
@@ -279,7 +280,7 @@ const clearCreateDialogForm = () => {
   createFormValues.posterFile = null
 }
 
-function onPosterSelect(event) {
+function onPosterSelect(event: FileUploadSelectEvent) {
   createFormValues.posterFile = event.files[0]
 }
 
@@ -305,11 +306,13 @@ fetchMovies()
       dataKey="id"
       :rowHover="true"
       :loading="state.loading"
-      removableSort
+      :first="state.page * state.pageSize"
+      :sortField="state.sortBy"
+      :sortOrder="state.sortDir === 'asc' ? 1 : -1"
       @page="state.page = $event.page"
       @update:rows="state.pageSize = $event"
       @update:sortField="state.sortBy = $event"
-      @update:sortOrder="state.sortDir = $event > 0 || $event === undefined ? 'asc' : 'desc'"
+      @update:sortOrder="state.sortDir = ($event ?? 1) > 0 ? 'asc' : 'desc'"
     >
       <template #header>
         <div class="flex justify-end">
@@ -352,6 +355,7 @@ fetchMovies()
           <img
             v-if="header.image"
             :src="`http://localhost:8080/api/file?filename=${data[header.key]}`"
+            :alt="`${header.title || 'item'}.jpg`"
             style="width: 50px"
           />
           <span v-else-if="data[header.key].length > 100" v-tooltip.top="data[header.key]">{{
@@ -514,7 +518,7 @@ fetchMovies()
                       <img
                         role="presentation"
                         :alt="files[0]?.name"
-                        :src="files[0]?.objectURL"
+                        :src="(files[0] as any)?.objectURL"
                         width="80"
                         height="40"
                       />
@@ -530,7 +534,7 @@ fetchMovies()
             <template #empty>
               <div class="flex items-center justify-center flex-col">
                 <i
-                  class="pi pi-cloud-upload !border-2 !rounded-full !p-4 !text-4xl !text-muted-color"
+                  class="pi pi-cloud-upload border-2! rounded-full! p-4! text-4xl! text-muted-color!"
                 />
                 <p class="mt-6 mb-0">Bilddatei hierhin verschieben</p>
               </div>

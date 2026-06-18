@@ -1,5 +1,6 @@
 import { http } from '@/api/http'
 import { getParamsFromPath, getPathWithParams, convertParamsToURL } from '@/helpers/url.helper'
+import type { UserInput } from '@/types/common'
 
 const ADMIN_ENDPOINTS = {
   pageableUsers: '/admin/users',
@@ -13,13 +14,11 @@ const ADMIN_ENDPOINTS = {
   allGames: '/admin/games',
 }
 
-const getPageableUsers = async (params?: any) => {
+const getPageableUsers = async (params?: Record<string, string | string[]>) => {
   try {
     let path = ADMIN_ENDPOINTS.pageableUsers
     if (getParamsFromPath(path)?.length) {
-      path = getPathWithParams(path, {
-        ...params,
-      })
+      path = getPathWithParams(path, params as Record<string, string | string[]>)
     }
     if (params) {
       const convertedParams = convertParamsToURL(params)
@@ -33,7 +32,7 @@ const getPageableUsers = async (params?: any) => {
   }
 }
 
-const createUser = async (body: any) => {
+const createUser = async (body: UserInput) => {
   try {
     const response = await http.post(ADMIN_ENDPOINTS.createUser, body)
     return response
@@ -59,7 +58,7 @@ const deleteUser = async (id: number) => {
   }
 }
 
-const editUser = async (id: number, body: any) => {
+const editUser = async (id: number, body: UserInput) => {
   try {
     let path = ADMIN_ENDPOINTS.editUser
     if (getParamsFromPath(path)?.length) {

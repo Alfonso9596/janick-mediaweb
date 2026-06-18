@@ -5,16 +5,28 @@ import { useRoute } from 'vue-router'
 import RatingOverview from '@/components/RatingOverview.vue'
 import TreeStructure from '@/components/TreeStructure.vue'
 import { Chip, useToast } from 'primevue'
+import type { FileItem, Series } from '@/types/common'
 
 const currentRoute = useRoute()
 const toast = useToast()
 
 const state = reactive<{
-  series: any
-  files: any[]
+  series: Series
+  files: FileItem[]
   loading: boolean
 }>({
-  series: {},
+  series: {
+    id: '',
+    name: '',
+    yearStart: 0,
+    yearEnd: undefined,
+    posterFilepath: undefined,
+    description: '',
+    episodeLength: undefined,
+    genres: [],
+    ratingAmount: 0,
+    ratingValue: 0
+  },
   files: [],
   loading: false,
 })
@@ -35,7 +47,7 @@ const fetchSeriesFiles = async () => {
 
 const setRating = async (rating: number) => {
   try {
-    await addRating(state.series.id, rating)
+    await addRating(Number(state.series.id), rating)
     toast.add({
       severity: 'success',
       summary: 'Bewertung hinzugefügt',

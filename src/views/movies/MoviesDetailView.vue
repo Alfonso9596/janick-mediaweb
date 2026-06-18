@@ -5,16 +5,27 @@ import { useRoute } from 'vue-router'
 import RatingOverview from '@/components/RatingOverview.vue'
 import TreeStructure from '@/components/TreeStructure.vue'
 import { Chip, useToast } from 'primevue'
+import type { FileItem, Movie } from '@/types/common'
 
 const currentRoute = useRoute()
 const toast = useToast()
 
 const state = reactive<{
-  movie: any
-  files: any[]
+  movie: Movie
+  files: FileItem[]
   loading: boolean
 }>({
-  movie: {},
+  movie: {
+    id: '',
+    name: '',
+    year: 0,
+    posterFilepath: undefined,
+    description: '',
+    length: undefined,
+    genres: [],
+    ratingAmount: 0,
+    ratingValue: 0
+  },
   files: [],
   loading: false,
 })
@@ -33,16 +44,24 @@ const fetchMovieFiles = async () => {
   state.loading = false
 }
 
-const setRating = async (event) => {
-  await addRating(state.movie.id, event)
-  fetchMovieById()
-
-  toast.add({
-    severity: 'success',
-    summary: 'Bewertung hinzugefügt',
-    detail: `Deine Bewertung von ${event} wurde hinzugefügt`,
-    life: 5000,
-  })
+const setRating = async (rating: number) => {
+  try {
+    await addRating(Number(state.movie.id), rating)
+    toast.add({
+      severity: 'success',
+      summary: 'Bewertung hinzugefügt',
+      detail: `Deine Bewertung von ${rating} wurde hinzugefügt.`,
+      life: 3000,
+    })
+    fetchMovieById()
+  } catch (error) {
+    console.error(error)
+    toast.add({
+      severity: 'error',
+      summary: 'Bewertung konnte nicht hinzugefügt werden. Bitte versuche es später erneut.',
+      life: 5000,
+    })
+  }
 }
 
 onBeforeMount(() => {

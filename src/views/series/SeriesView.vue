@@ -4,19 +4,20 @@ import { getPageableSeries, createNewSeries } from '@/api/networks/series.networ
 import { getAllGenres } from '@/api/networks/movies.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useSeriesStore } from '@/stores/series.store'
-import { Column, DataTable } from 'primevue'
+import { Column, DataTable, type FileUploadSelectEvent } from 'primevue'
 import { useRoute } from 'vue-router'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import router from '@/router'
+import type { Series, Genre } from '@/types/common'
 
 const seriesStore = useSeriesStore()
 const currentRoute = useRoute()
 const toast = useToast()
 
 const state = reactive<{
-  seriesList: any[]
+  seriesList: Series[]
   page: number
   pageSize: number
   sortBy: string
@@ -28,7 +29,7 @@ const state = reactive<{
   searchGenre: string
   createDialogVisible: boolean
   genreListLoading: boolean
-  genreList: any[]
+  genreList: Genre[]
 }>({
   seriesList: [],
   page: seriesStore.seriesPage,
@@ -68,7 +69,7 @@ const createFormValues = reactive<{
   yearEnd: number
   length: number
   genres: string[]
-  posterFile: any
+  posterFile: File | null
 }>({
   name: '',
   description: '',
@@ -150,6 +151,7 @@ const headers = computed(() => [
   {
     key: 'yearStart',
     title: 'Erscheinungsjahr',
+    sortable: true,
   },
   {
     key: 'ratingValue',
@@ -157,12 +159,12 @@ const headers = computed(() => [
   },
 ])
 
-const fetchSeries = async (name?: string) => {
+const fetchSeries = async () => {
   state.loading = true
 
   const params = {
-    pageSize: state.pageSize,
-    page: state.page,
+    pageSize: String(state.pageSize),
+    page: String(state.page),
     sortBy: state.sortBy,
     sortDir: state.sortDir,
     ...currentRoute.query,
@@ -180,10 +182,8 @@ const fetchSeries = async (name?: string) => {
 
 const fetchGenreList = async () => {
   state.genreListLoading = true
-
   const response = await getAllGenres()
   state.genreList = response
-
   state.genreListLoading = false
 }
 
@@ -191,7 +191,7 @@ const capDescription = (value: string) => {
   return value ? value.substring(0, 100) + '...' : ''
 }
 
-const goToSeriesPage = (series: any) => {
+const goToSeriesPage = (series: Series) => {
   router.push('/series/' + series.id)
 }
 
@@ -218,7 +218,7 @@ const resolver = ref(
   ),
 )
 
-const onCreateFormSubmit = async (e) => {
+const onCreateFormSubmit = async (e: { valid: boolean }) => {
   if (e.valid) {
     if (createFormValues.posterFile !== null) {
       const posterResponse = await uploadNewPoster(
@@ -232,7 +232,7 @@ const onCreateFormSubmit = async (e) => {
         console.error('Failed image upload')
         toast.add({
           severity: 'error',
-          summary: 'Ein Poster für \"' + createFormValues.name + '\" existiert bereits',
+          summary: 'Ein Poster für "' + createFormValues.name + '" existiert bereits',
           life: 5000,
         })
         return
@@ -242,7 +242,7 @@ const onCreateFormSubmit = async (e) => {
     const seriesResponse = await createNewSeries(createFormValues)
 
     if (!seriesResponse) {
-      if (createFormValues.posterFile !== null) {
+      if (createFormValues.posterFile) {
         console.log('Failed series upload, Poster succeeded')
         toast.add({
           severity: 'error',
@@ -254,7 +254,7 @@ const onCreateFormSubmit = async (e) => {
         console.log('Failed series upload')
         toast.add({
           severity: 'error',
-          summary: 'Die Serie \"' + createFormValues.name + '\" existiert bereits',
+          summary: 'Die Serie "' + createFormValues.name + '" existiert bereits',
           life: 5000,
         })
         return
@@ -262,7 +262,7 @@ const onCreateFormSubmit = async (e) => {
     }
     toast.add({
       severity: 'success',
-      summary: 'Die Serie \"' + createFormValues.name + '\" wurde gespeichert',
+      summary: 'Die Serie "' + createFormValues.name + '" wurde gespeichert',
       life: 3000,
     })
     state.createDialogVisible = false
@@ -281,7 +281,7 @@ const clearCreateDialogForm = () => {
   createFormValues.posterFile = null
 }
 
-function onPosterSelect(event) {
+function onPosterSelect(event: FileUploadSelectEvent) {
   createFormValues.posterFile = event.files[0]
 }
 
@@ -307,10 +307,13 @@ fetchSeries()
       dataKey="id"
       :rowHover="true"
       :loading="state.loading"
+      :first="state.page * state.pageSize"
+      :sortField="state.sortBy"
+      :sortOrder="state.sortDir === 'asc' ? 1 : -1"
       @page="state.page = $event.page"
       @update:rows="state.pageSize = $event"
       @update:sortField="state.sortBy = $event"
-      @update:sortOrder="state.sortDir = $event > 0 || $event === undefined ? 'asc' : 'desc'"
+      @update:sortOrder="state.sortDir = ($event ?? 1) > 0 ? 'asc' : 'desc'"
     >
       <template #header>
         <div class="flex justify-end">
@@ -353,6 +356,7 @@ fetchSeries()
           <img
             v-if="header.image"
             :src="`http://localhost:8080/api/file?filename=${data[header.key]}`"
+            :alt="`${header.title || 'item'}.jpg`"
             style="width: 50px"
           />
           <span v-else-if="data[header.key].length > 100" v-tooltip.top="data[header.key]">{{
@@ -361,7 +365,7 @@ fetchSeries()
           <span v-else>{{ data[header.key] }}</span>
         </template>
       </Column>
-      <Column class="w-24 !text-end">
+      <Column class="w-24 text-end!">
         <template #body="{ data }">
           <Button
             icon="pi pi-info-circle"
@@ -375,7 +379,7 @@ fetchSeries()
       </Column>
     </DataTable>
 
-    <!-- CREATE SERIES FROM DIALOG -->
+    <!-- CREATE SERIES FORM DIALOG -->
     <Dialog
       @afterHide="clearCreateDialogForm"
       v-model:visible="state.createDialogVisible"
@@ -533,7 +537,7 @@ fetchSeries()
                       <img
                         role="presentation"
                         :alt="files[0]?.name"
-                        :src="files[0]?.objectURL"
+                        :src="(files[0] as any)?.objectURL"
                         width="80"
                         height="40"
                       />
@@ -549,7 +553,7 @@ fetchSeries()
             <template #empty>
               <div class="flex items-center justify-center flex-col">
                 <i
-                  class="pi pi-cloud-upload !border-2 !rounded-full !p-4 !text-4xl !text-muted-color"
+                  class="pi pi-cloud-upload border-2! rounded-full! p-4! text-4xl! text-muted-color!"
                 />
                 <p class="mt-6 mb-0">Bilddatei hierhin verschieben</p>
               </div>

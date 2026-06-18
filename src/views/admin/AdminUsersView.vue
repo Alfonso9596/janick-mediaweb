@@ -16,13 +16,14 @@ import { computed, reactive, ref, watch } from 'vue'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
+import type { User, Role } from '@/types/common'
 
 const toast = useToast()
 
 const authStore = useAuthStore()
 
 const state = reactive<{
-  userList: any[]
+  userList: User[]
   totalRecrods: number
   totalPages: number
   page: number
@@ -33,7 +34,7 @@ const state = reactive<{
   searchName: string
   searchRole: string
   roleListLoading: boolean
-  roleList: any[]
+  roleList: Role[]
   createDialogVisible: boolean
   editDialogVisible: boolean
   editDialogUserId: number
@@ -137,7 +138,7 @@ const editUserResolver = ref(
   ),
 )
 
-const onCreateUserFormSubmit = async (e) => {
+const onCreateUserFormSubmit = async (e: { valid: boolean}) => {
   if (e.valid) {
     const createUserResponse = await createUser(createUserFormValues)
 
@@ -145,13 +146,13 @@ const onCreateUserFormSubmit = async (e) => {
       console.log('Failed user creation')
       toast.add({
         severity: 'error',
-        summary: 'Benutzer \"' + createUserFormValues.username + '\" existiert bereits',
+        summary: 'Benutzer "' + createUserFormValues.username + '" existiert bereits',
         life: 5000,
       })
     }
     toast.add({
       severity: 'success',
-      summary: 'Benutzer \"' + createUserFormValues.username + '\" erfolgreich erstellt',
+      summary: 'Benutzer "' + createUserFormValues.username + '" erfolgreich erstellt',
       life: 3000,
     })
     state.createDialogVisible = false
@@ -164,17 +165,17 @@ const onDeleteUserSubmit = async () => {
   console.log('Deleting user with ID:', state.deleteDialogUserId)
   const deleteUserResponse = await deleteUser(state.deleteDialogUserId)
 
-  if (!deleteUserResponse) {
+  if (deleteUserResponse === false) {
     console.log('Failed user deletion')
     toast.add({
       severity: 'error',
-      summary: 'Fehler beim Löschen des Benutzers \"' + state.deleteDialogUsername + '\"',
+      summary: 'Fehler beim Löschen des Benutzers "' + state.deleteDialogUsername + '"',
       life: 5000,
     })
   } else {
     toast.add({
       severity: 'success',
-      summary: 'Benutzer \"' + state.deleteDialogUsername + '\" erfolgreich gelöscht',
+      summary: 'Benutzer "' + state.deleteDialogUsername + '" erfolgreich gelöscht',
       life: 3000,
     })
   }
@@ -182,24 +183,24 @@ const onDeleteUserSubmit = async () => {
   fetchUsers()
 }
 
-const onEditUserFormSubmit = async (e) => {
+const onEditUserFormSubmit = async () => {
   if (!editUserFormValues.editPassword) {
     delete editUserFormValues.password
   }
   delete editUserFormValues.editPassword
   const editUserResponse = await editUser(state.editDialogUserId, editUserFormValues)
 
-  if (!editUserResponse) {
+  if (editUserResponse === false) {
     console.log('Failed user edit')
     toast.add({
       severity: 'error',
-      summary: 'Fehler beim Bearbeiten des Benutzers \"' + editUserFormValues.username + '\"',
+      summary: 'Fehler beim Bearbeiten des Benutzers "' + editUserFormValues.username + '"',
       life: 5000,
     })
   } else {
     toast.add({
       severity: 'success',
-      summary: 'Benutzer \"' + editUserFormValues.username + '\" erfolgreich bearbeitet',
+      summary: 'Benutzer "' + editUserFormValues.username + '" erfolgreich bearbeitet',
       life: 3000,
     })
   }
@@ -214,12 +215,12 @@ const clearCreateDialogForm = () => {
   createUserFormValues.isEnabled = true
 }
 
-const showEditUserDialog = (user: any) => {
+const showEditUserDialog = (user: User) => {
   console.log(user.enabled)
   state.editDialogUserId = user.id
   editUserFormValues.username = user.username
   editUserFormValues.password = ''
-  editUserFormValues.roles = [...user.roles]
+  editUserFormValues.roles = user.roles ?? []
   editUserFormValues.editPassword = false
   editUserFormValues.isEnabled = user.enabled
   state.editDialogVisible = true
@@ -235,7 +236,7 @@ const clearEditDialogForm = () => {
   editUserFormValues.isEnabled = false
 }
 
-const showDeleteUserDialog = async (user: any) => {
+const showDeleteUserDialog = async (user: User) => {
   state.deleteDialogUsername = user.username
   state.deleteDialogUserId = user.id
   state.deleteDialogVisible = true
@@ -259,8 +260,8 @@ const fetchUsers = async () => {
   state.loading = true
 
   const params = {
-    pageSize: state.pageSize,
-    page: state.page,
+    pageSize: String(state.pageSize),
+    page: String(state.page),
     username: state.searchName ? state.searchName : '',
     role: state.searchRole ? state.searchRole : '',
   }
@@ -300,11 +301,13 @@ fetchRoleList()
       dataKey="id"
       :rowHover="true"
       :loading="state.loading"
-      removableSort
+      :first="state.page * state.pageSize"
+      :sortField="state.sortBy"
+      :sortOrder="state.sortDir === 'asc' ? 1 : -1"
       @page="state.page = $event.page"
       @update:rows="state.pageSize = $event"
       @update:sortFields="state.sortBy = $event"
-      @update:sortOrder="state.sortDir = $event > 0 || $event === undefined ? 'asc' : 'desc'"
+      @update:sortOrder="state.sortDir = ($event ?? 1) > 0 ? 'asc' : 'desc'"
     >
       <template #header>
         <div class="flex justify-end">

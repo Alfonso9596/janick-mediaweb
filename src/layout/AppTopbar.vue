@@ -89,7 +89,7 @@ const registerResolver = ref(
 
 const onLoginFormSubmit = async () => {
   const response = await authStore.login(loginFormValues.username, loginFormValues.password)
-  if (!response) {
+  if (response === false) {
     toast.add({
       severity: 'error',
       summary: 'Login fehlgeschlagen',
@@ -129,7 +129,7 @@ const onLogout = async () => {
 
 const onRegisterFormSubmit = async () => {
   const response = await authStore.register(loginFormValues.username, loginFormValues.password)
-  if (!response) {
+  if (response === false) {
     toast.add({
       severity: 'error',
       summary: 'Registrierung fehlgeschlagen',

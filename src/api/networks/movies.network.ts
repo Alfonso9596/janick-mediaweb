@@ -1,5 +1,6 @@
 import { http } from '@/api/http'
 import { getParamsFromPath, getPathWithParams, convertParamsToURL } from '@/helpers/url.helper'
+import type { MovieInput } from '@/types/common'
 
 const MOVIES_ENDPOINTS = {
   pageableMovies: '/movies',
@@ -10,13 +11,11 @@ const MOVIES_ENDPOINTS = {
   addRating: '/movies/rating',
 }
 
-const getPageableMovies = async (params?: any) => {
+const getPageableMovies = async (params?: Record<string, string | string[]>) => {
   try {
     let path = MOVIES_ENDPOINTS.pageableMovies
     if (getParamsFromPath(path)?.length) {
-      path = getPathWithParams(path, {
-        ...params,
-      })
+      path = getPathWithParams(path, params as Record<string, string | string[]>)
     }
     if (params) {
       const convertedParams = convertParamsToURL(params)
@@ -56,7 +55,7 @@ const getAllGenres = async () => {
   }
 }
 
-const createNewMovie = async (body: any) => {
+const createNewMovie = async (body: MovieInput) => {
   try {
     const response = await http.post(MOVIES_ENDPOINTS.createMovie, body)
     return response

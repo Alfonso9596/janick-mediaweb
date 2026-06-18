@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { getAllMovies } from '@/api/networks/admin.network'
 import { onMounted, reactive, ref, watch } from 'vue'
+import type { Movie } from '@/types/common'
 
 const state = reactive<{
-  movieList: any[]
+  movieList: Movie[]
   totalRecords: number
   loading: boolean
 }>({

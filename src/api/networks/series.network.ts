@@ -1,5 +1,6 @@
 import http from '@/api/http'
 import { getParamsFromPath, getPathWithParams, convertParamsToURL } from '@/helpers/url.helper'
+import type { SeriesInput } from '@/types/common'
 
 const SERIES_ENDPOINTS = {
   pageableSeries: '/series',
@@ -9,13 +10,11 @@ const SERIES_ENDPOINTS = {
   addRating: '/series/rating',
 }
 
-const getPageableSeries = async (params?: any) => {
+const getPageableSeries = async (params?: Record<string, string | string[]>) => {
   try {
     let path = SERIES_ENDPOINTS.pageableSeries
     if (getParamsFromPath(path)?.length) {
-      path = getPathWithParams(path, {
-        ...params,
-      })
+      path = getPathWithParams(path, params as Record<string, string | string[]>)
     }
     if (params) {
       const convertedParams = convertParamsToURL(params)
@@ -45,7 +44,7 @@ const getSeriesById = async (id: string) => {
   }
 }
 
-const createNewSeries = async (body: any) => {
+const createNewSeries = async (body: SeriesInput) => {
   try {
     const response = await http.post(SERIES_ENDPOINTS.createSeries, body)
     return response

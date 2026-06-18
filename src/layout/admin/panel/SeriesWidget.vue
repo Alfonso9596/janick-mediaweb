@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { getAllSeries } from '@/api/networks/admin.network'
 import { onMounted, reactive, ref, watch } from 'vue'
+import type { Series } from '@/types/common'
 
 const state = reactive<{
-  seriesList: any[]
+  seriesList: Series[]
   totalRecords: number
   loading: boolean
 }>({

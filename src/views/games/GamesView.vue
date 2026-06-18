@@ -3,19 +3,20 @@ import { computed, reactive, ref, watch } from 'vue'
 import { getPageableGames, getAllGenres, getAllPlatforms, createNewGame } from '@/api/networks/games.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useGameStore } from '@/stores/games.store'
-import { Column, DataTable, FileUpload } from 'primevue'
+import { Column, DataTable, FileUpload, type FileUploadSelectEvent } from 'primevue'
 import { useRoute } from 'vue-router'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import router from '@/router'
+import type { Game, Genre, Platform } from '@/types/common'
 
 const gameStore = useGameStore()
 const currentRoute = useRoute()
 const toast = useToast()
 
 const state = reactive<{
-  gameList: any[]
+  gameList: Game[]
   page: number
   pageSize: number
   sortBy: string
@@ -28,9 +29,9 @@ const state = reactive<{
   searchPlatform: string
   createDialogVisible: boolean
   genreListLoading: boolean
-  genreList: any[]
+  genreList: Genre[]
   platformListLoading: boolean
-  platformList: any[]
+  platformList: Platform[]
 }>({
   gameList: [],
   page: gameStore.gamesPage,
@@ -68,7 +69,7 @@ const createFormValues = reactive<{
   year: number
   genres: string[]
   platforms: string[]
-  posterFile: any
+  posterFile: File | null
 }>({
   name: '',
   description: '',
@@ -168,8 +169,8 @@ const fetchGames = async () => {
   state.loading = true
 
   const params = {
-    pageSize: state.pageSize,
-    page: state.page,
+    pageSize: String(state.pageSize),
+    page: String(state.page),
     sortBy: state.sortBy,
     sortDir: state.sortDir,
     ...currentRoute.query,
@@ -204,7 +205,7 @@ const capDescription = (value: string) => {
   return value ? value.substring(0, 100) + '...' : ''
 }
 
-const goToGamePage = (game: any) => {
+const goToGamePage = (game: Game) => {
   router.push('/games/' + game.id)
 }
 
@@ -227,7 +228,7 @@ const resolver = ref(
   ),
 )
 
-const onCreateFormSubmit = async (e) => {
+const onCreateFormSubmit = async (e: { valid: boolean }) => {
   if (e.valid) {
     if (createFormValues.posterFile !== null) {
       const posterResponse = await uploadNewPoster(
@@ -241,7 +242,7 @@ const onCreateFormSubmit = async (e) => {
         console.error('Failed image upload')
         useToast().add({
           severity: 'error',
-          summary: 'Ein Poster für \"' + createFormValues.name + '\" konnte nicht hochgeladen werden.',
+          summary: 'Ein Poster für "' + createFormValues.name + '" konnte nicht hochgeladen werden.',
           life: 5000,
         })
         return
@@ -251,7 +252,7 @@ const onCreateFormSubmit = async (e) => {
     const gameResponse = await createNewGame(createFormValues)
 
     if (!gameResponse) {
-      if (createFormValues.posterFile !== null) {
+      if (createFormValues.posterFile) {
         console.log('Failed game upload, Poster succeeded')
         toast.add({
           severity: 'error',
@@ -263,7 +264,7 @@ const onCreateFormSubmit = async (e) => {
         console.log('Failed game upload')
         toast.add({
           severity: 'error',
-          summary: 'Das Spiel \"' + createFormValues.name + '\" existiert bereits',
+          summary: 'Das Spiel "' + createFormValues.name + '" existiert bereits',
           life: 5000,
         })
         return
@@ -271,7 +272,7 @@ const onCreateFormSubmit = async (e) => {
     }
     toast.add({
       severity: 'success',
-      summary: 'Das Spiel \"' + createFormValues.name + '\" wurde gespeichert',
+      summary: 'Das Spiel "' + createFormValues.name + '" wurde gespeichert',
       life: 3000,
     })
     state.createDialogVisible = false
@@ -288,7 +289,7 @@ const clearCreateDialogForm = () => {
   createFormValues.posterFile = null
 }
 
-function onPosterSelect(event) {
+function onPosterSelect(event: FileUploadSelectEvent) {
   createFormValues.posterFile = event.files[0]
 }
 
@@ -315,10 +316,13 @@ fetchGames()
       dataKey="id"
       :rowHover="true"
       :loading="state.loading"
+      :first="state.page * state.pageSize"
+      :sortField="state.sortBy"
+      :sortOrder="state.sortDir === 'asc' ? 1 : -1"
       @page="state.page = $event.page"
       @update:rows="state.pageSize = $event"
       @update:sortField="state.sortBy = $event"
-      @update:sortOrder="state.sortDir = $event > 0 || $event === undefined ? 'asc' : 'desc'"
+      @update:sortOrder="state.sortDir = ($event ?? 1) > 0 ? 'asc' : 'desc'"
     >
       <template #header>
         <div class="flex justify-end">
@@ -371,6 +375,7 @@ fetchGames()
           <img
             v-if="header.image"
             :src="`http://localhost:8080/api/file?filename=${data[header.key]}`"
+            :alt="`${header.title || 'item'}.jpg`"
             style="width: 50px"
           />
           <span v-else-if="data[header.key].length > 100" v-tooltip.top="data[header.key]">{{
@@ -379,7 +384,7 @@ fetchGames()
           <span v-else>{{ data[header.key] }}</span>
         </template>
       </Column>
-      <Column class="w-24 !text-end">
+      <Column class="w-24 text-end!">
         <template #body="{ data }">
           <Button
             icon="pi pi-info-circle"
@@ -534,7 +539,7 @@ fetchGames()
                       <img
                         role="presentation"
                         :alt="files[0]?.name"
-                        :src="files[0]?.objectURL"
+                        :src="(files[0] as any)?.objectURL"
                         width="80"
                         height="40"
                       />
@@ -550,12 +555,15 @@ fetchGames()
             <template #empty>
               <div class="flex items-center justify-center flex-col">
                 <i
-                  class="pi pi-cloud-upload !border-2 !rounded-full !p-4 !text-4xl !text-muted-color"
+                  class="pi pi-cloud-upload border-2! rounded-full! p-4! text-4xl! text-muted-color!"
                 />
                 <p class="mt-6 mb-0">Bilddatei hierhin verschieben</p>
               </div>
             </template>
           </FileUpload>
+        </div>
+        <div class="field col-6">
+          <Button type="submit" severity="success" label="Bestätigen" />
         </div>
       </Form>
     </Dialog>

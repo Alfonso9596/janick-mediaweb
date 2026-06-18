@@ -5,13 +5,15 @@ import AppMenuItem from '@/layout/AppMenuItem.vue'
 const model = ref([
   {
     label: 'Dashboard',
-    items: [{ label: 'Übersicht', icon: 'pi pi-fw pi-home', to: '/admin' }],
+    items: [{ label: 'Übersicht', icon: 'pi pi-fw pi-home', to: '/admin', key: '0-0' }],
+    key: '0'
   },
   {
     label: 'Benutzerverwaltung',
     items: [
-      { label: 'Alle Benutzer', icon: 'pi pi-fw pi-users', to: '/admin/users' },
+      { label: 'Alle Benutzer', icon: 'pi pi-fw pi-users', to: '/admin/users', key: '1-0' },
     ],
+    key: '1'
   },
   {
     label: 'Inhaltsverwaltung',
@@ -22,15 +24,13 @@ const model = ref([
       { label: 'Musik verwalten', vicon: 'fa-music', to: '/admin/music' },
       { label: 'Rezepte verwalten', vicon: 'fa-utensils', to: '/admin/recipes' },
     ],
+    key: '2'
   },
 ])
 </script>
 
 <template>
-  <ul class="layout-menu">
-    <template v-for="(item, i) in model" :key="item">
-      <AppMenuItem v-if="!item.separator" :item="item" :index="i"></AppMenuItem>
-      <li v-if="item.separator" class="menu-separator"></li>
-    </template>
-  </ul>
+  <template v-for="(item, i) in model" :key="item">
+    <AppMenuItem :item="item" :index="i"></AppMenuItem>
+  </template>
 </template>

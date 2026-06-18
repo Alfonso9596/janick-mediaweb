@@ -5,7 +5,7 @@ export const getParamsFromPath = (path: string | undefined) => {
     return ['']
   }
   return path
-    ?.split(/\/|\?|&|=/)
+    ?.split(/[/?&=]/)
     .filter((i) => i.includes(':'))
     .map((i) => i.slice(1))
 }
@@ -23,18 +23,17 @@ export const getPathWithParams = (
   return newPath
 }
 
-export const convertParamsToURL = (params: any) => {
+export const convertParamsToURL = (params: Record<string, string | string[]>) => {
   let queryParams = ''
   for (const key in params) {
-    if (params[key].length !== 0) {
-      if (Array.isArray(params[key])) {
-        params[key].forEach((item: { [x: string]: any }) => {
-          for (const itemKey in item) {
-            queryParams += `&${key}=${itemKey}=${item[itemKey]}`
-          }
+    const value = params[key]
+    if (value !== null && value.length !== 0) {
+      if (Array.isArray(value)) {
+        value.forEach((item) => {
+          queryParams += `&${key}=${item}`
         })
       } else {
-        queryParams += `&${key}=${params[key]}`
+        queryParams += `&${key}=${value}`
       }
     }
   }

@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed, watch, type PropType } from 'vue'
 import { TreeTable, Column } from 'primevue'
 import type { TreeNode } from 'primevue/treenode'
+import type { FileItem } from '@/types/common'
 
 const props = defineProps({
   files: {
-    type: Array,
-    default: () => [] as File[],
+    type: Array as PropType<FileItem[]>,
+    default: () => [] as FileItem[],
   },
   loading: {
     type: Boolean,
@@ -23,13 +24,13 @@ watch(
   }
 )
 
-const treeConfig = computed(() => {
-  const getTreeItem = (item: any): TreeNode => ({
+const treeConfig = computed<TreeNode[]>(() => {
+  const getTreeItem = (item: FileItem): TreeNode => ({
     data: item,
-    key: item.key,
+    key: item.key ?? '',
     label: item.name,
     children: item.children?.length
-      ? item.children.map((child: any) => getTreeItem(child))
+      ? item.children.map((child: FileItem) => getTreeItem(child))
       : undefined,
   })
   return props.files.map((file) => getTreeItem(file))
@@ -37,12 +38,12 @@ const treeConfig = computed(() => {
 
 const numeratedTreeConfig = () => {
   props.files.forEach((file, index) => {
-    const f: any = file
+    const f = file as FileItem
     f.key = `${index}`
     f.size = formatFileSize(f)
 
     if (f.children && f.children.length > 0) {
-      f.children.forEach((child: any, childIndex: number) => {
+      f.children.forEach((child: FileItem, childIndex: number) => {
         child.key = `${index}-${childIndex}`
         child.size = formatFileSize(child)
       })
@@ -50,18 +51,19 @@ const numeratedTreeConfig = () => {
   })
 }
 
-function formatFileSize(file: any): string {
+function formatFileSize(file: FileItem): string {
   if (file.fileType === 'FOLDER') {
     return '-'
   }
-  if (file.size < 1024) {
-    return file.size + ' B'
-  } else if (file.size < 1024 * 1024) {
-    return (file.size / 1024).toFixed(2) + ' KB'
-  } else if (file.size < 1024 * 1024 * 1024) {
-    return (file.size / (1024 * 1024)).toFixed(2) + ' MB'
+  const size = typeof file.size === 'number' ? file.size : Number.parseInt(file.size, 10)
+  if (size < 1024) {
+    return size + ' B'
+  } else if (size < 1024 * 1024) {
+    return (size / 1024).toFixed(2) + ' KB'
+  } else if (size < 1024 * 1024 * 1024) {
+    return (size / (1024 * 1024)).toFixed(2) + ' MB'
   } else {
-    return (file.size / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
+    return (size / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
   }
 }
 </script>

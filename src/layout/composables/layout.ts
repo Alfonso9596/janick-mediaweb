@@ -1,4 +1,4 @@
-import { computed, reactive } from 'vue'
+import { computed, reactive, type Ref } from 'vue'
 
 const layoutConfig = reactive<{
   preset: string
@@ -14,7 +14,16 @@ const layoutConfig = reactive<{
   menuMode: 'static',
 })
 
-const layoutState = reactive({
+const layoutState = reactive<{
+  staticMenuDesktopInactive: boolean
+  overlayMenuActive: boolean
+  profileSidebarVisible: boolean
+  configSidebarVisible: boolean
+  staticMenuMobileActive: boolean
+  menuHoverActive: boolean
+  activeMenuItem: string | null
+  pageLoading: boolean
+}>({
   staticMenuDesktopInactive: false,
   overlayMenuActive: false,
   profileSidebarVisible: false,
@@ -26,8 +35,17 @@ const layoutState = reactive({
 })
 
 export function useLayout() {
-  const setActiveMenuItem = (item) => {
-    layoutState.activeMenuItem = item.value || item
+  const setActiveMenuItem = (item: string | Ref<string | null> | null) => {
+    if (!item) {
+      layoutState.activeMenuItem = null
+      return
+    }
+
+    if (typeof item === 'string') {
+      layoutState.activeMenuItem = item || null
+    } else {
+      layoutState.activeMenuItem = item.value || null
+    }
   }
 
   const setPageLoading = (loading: boolean) => {

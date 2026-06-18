@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { getAllGames } from '@/api/networks/admin.network'
 import { onMounted, reactive, ref, watch } from 'vue'
+import type { Game } from '@/types/common'
 
 const state = reactive<{
-  gameList: any[]
+  gameList: Game[]
   totalRecords: number
   loading: boolean
 }>({

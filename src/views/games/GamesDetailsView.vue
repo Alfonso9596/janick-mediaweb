@@ -5,16 +5,27 @@ import { useRoute } from 'vue-router'
 import RatingOverview from '@/components/RatingOverview.vue'
 import TreeStructure from '@/components/TreeStructure.vue'
 import { Chip, useToast } from 'primevue'
+import type { FileItem, Game } from '@/types/common'
 
 const currentRoute = useRoute()
 const toast = useToast()
 
 const state = reactive<{
-  game: any
-  files: any[]
+  game: Game
+  files: FileItem[]
   loading: boolean
 }>({
-  game: {},
+  game: {
+    id: '',
+    name: '',
+    year: 0,
+    posterFilepath: undefined,
+    description: '',
+    genres: [],
+    platforms: [],
+    ratingAmount: 0,
+    ratingValue: 0
+  },
   files: [],
   loading: false,
 })
@@ -35,7 +46,7 @@ const fetchGameFiles = async () => {
 
 const setRating = async (rating: number) => {
   try {
-    await addRating(state.game.id, rating)
+    await addRating(Number(state.game.id), rating)
     toast.add({
       severity: 'success',
       summary: 'Bewertung hinzugefügt',

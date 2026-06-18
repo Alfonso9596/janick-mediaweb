@@ -15,7 +15,7 @@ const httpForm: AxiosInstance = axios.create({
   },
 })
 
-/*http.interceptors.request.use(
+httpForm.interceptors.request.use(
   function (config) {
     const token = localStorage.getItem('ACCESS_TOKEN')
     if (token) {
@@ -26,7 +26,7 @@ const httpForm: AxiosInstance = axios.create({
   function (error) {
     return Promise.reject(error)
   },
-)*/
+)
 
 export { http, httpForm }
 export default http

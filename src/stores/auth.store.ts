@@ -14,18 +14,30 @@ const parseJwt = (token: string | undefined) => {
     return
   }
   const base64Url = token.split('.')[1]
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+  const base64 = base64Url.replaceAll('-', '+').replaceAll('_', '/')
   const jsonPayload = decodeURIComponent(
-    window
+    globalThis
       .atob(base64)
       .split('')
       .map(function (c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+        return '%' + ('00' + c.codePointAt(0)!.toString(16)).slice(-2)
       })
       .join(''),
   )
 
   return JSON.parse(jsonPayload)
+}
+
+async function register(username: string | undefined, password: string | undefined) {
+  if (!username || !password) {
+    return false
+  }
+  const response = await AuthenticationNetwork.registerReqeust(username, password)
+  if (!response) {
+    return false
+  }
+
+  return true
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -139,18 +151,6 @@ export const useAuthStore = defineStore('auth', () => {
         response.data.refreshToken,
         JSON.stringify(response.data),
       )
-    }
-
-    return true
-  }
-
-  async function register(username: string | undefined, password: string | undefined) {
-    if (!username || !password) {
-      return false
-    }
-    const response = await AuthenticationNetwork.registerReqeust(username, password)
-    if (!response) {
-      return false
     }
 
     return true

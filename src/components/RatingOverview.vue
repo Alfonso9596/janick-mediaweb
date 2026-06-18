@@ -8,7 +8,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const emitRating = (event) => {
+const emitRating = (event: { value: number }) => {
   emit('update:modelValue', event.value)
 }
 </script>

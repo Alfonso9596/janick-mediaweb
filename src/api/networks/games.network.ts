@@ -1,5 +1,6 @@
 import http from '@/api/http'
 import { getParamsFromPath, getPathWithParams, convertParamsToURL } from '@/helpers/url.helper'
+import type { GameInput } from '@/types/common'
 
 const GAMES_ENDPOINTS = {
   pageabelGames: '/games',
@@ -11,13 +12,11 @@ const GAMES_ENDPOINTS = {
   addRating: '/games/rating',
 }
 
-const getPageableGames = async (params?: any) => {
+const getPageableGames = async (params?: Record<string, string | string[]>) => {
   try {
     let path = GAMES_ENDPOINTS.pageabelGames
     if (getParamsFromPath(path)?.length) {
-      path = getPathWithParams(path, {
-        ...params,
-      })
+      path = getPathWithParams(path, params as Record<string, string | string[]>)
     }
     if (params) {
       const convertedParams = convertParamsToURL(params)
@@ -67,7 +66,7 @@ const getAllPlatforms = async () => {
   }
 }
 
-const createNewGame = async (body: any) => {
+const createNewGame = async (body: GameInput) => {
   try {
     const response = await http.post(GAMES_ENDPOINTS.createGame, body)
     return response

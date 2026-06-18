@@ -11,7 +11,5 @@ import GameWidget from '@/layout/admin/panel/GameWidget.vue'
       <SeriesWidget />
       <GameWidget />
     </div>
-    <!--<div class="col-span-12 lg:col-span-6 xl:col-span-3"><SeriesWidget /></div>
-    <div class="col-span-12 lg:col-span-6 xl:col-span-3"><GameWidget /></div>-->
   </div>
 </template>
