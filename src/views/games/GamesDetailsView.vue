@@ -90,7 +90,7 @@ onBeforeMount(() => {
           <Chip class="mr-2" v-for="platform in state.game.platforms" :key="platform" :label="platform" />
         </div>
       </div>
-      <TreeStructure :series="state.game" :files="state.files" :loading="state.loading" />
+      <TreeStructure :files="state.files" :loading="state.loading" />
     </div>
   </div>
 </template>

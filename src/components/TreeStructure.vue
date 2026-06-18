@@ -1,13 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { TreeTable, Column } from 'primevue'
 import type { TreeNode } from 'primevue/treenode'
 
 const props = defineProps({
-	series: {
-    type: Object,
-    default: () => ({}),
-  },
   files: {
     type: Array,
     default: () => [] as File[],
@@ -18,9 +14,14 @@ const props = defineProps({
   },
 })
 
-onMounted(() => {
-  numeratedTreeConfig()
-})
+watch(
+  () => props.files,
+  () => {
+    if (props.files.length > 0) {
+      numeratedTreeConfig()
+    }
+  }
+)
 
 const treeConfig = computed(() => {
   const getTreeItem = (item: any): TreeNode => ({

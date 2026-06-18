@@ -63,7 +63,7 @@ onBeforeMount(() => {
   <div class="card">
     <div class="grid grid-cols-4 gap-2" style="display: grid">
       <div class="col-span-4" style="font-size: 1.5rem">
-        {{ state.series.name }} ({{ state.series.year }})<i
+        {{ state.series.name }} ({{ state.series.yearStart }} - {{ state.series.yearEnd }})<i
           class="pi pi-heart"
           style="color: #ea0c74; margin-left: 1rem"
         ></i>
@@ -87,7 +87,7 @@ onBeforeMount(() => {
           <Chip class="mr-2" v-for="genre in state.series.genres" :key="genre" :label="genre" />
         </div>
       </div>
-      <TreeStructure :series="state.series" :files="state.files" :loading="state.loading" />
+      <TreeStructure :files="state.files" :loading="state.loading" />
     </div>
   </div>
 </template>

@@ -82,7 +82,7 @@ onBeforeMount(() => {
           <Chip class="mr-2" v-for="genre in state.movie.genres" :key="genre" :label="genre" />
         </div>
       </div>
-      <TreeStructure :series="state.movie" :files="state.files" :loading="state.loading" />
+      <TreeStructure :files="state.files" :loading="state.loading" />
     </div>
   </div>
 </template>
