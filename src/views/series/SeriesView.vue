@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { getPageableSeries, createNewSeries } from '@/api/networks/series.network'
+import { getPageableSeries, createNewSeries, editSeries } from '@/api/networks/series.network'
 import { getAllGenres } from '@/api/networks/movies.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useSeriesStore } from '@/stores/series.store'
@@ -9,10 +9,12 @@ import { useRoute } from 'vue-router'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
+import { useAuthStore } from '@/stores/auth.store'
 import router from '@/router'
 import type { Series, Genre } from '@/types/common'
 
 const seriesStore = useSeriesStore()
+const authStore = useAuthStore()
 const currentRoute = useRoute()
 const toast = useToast()
 const cm = ref()
@@ -31,6 +33,8 @@ const state = reactive<{
   createDialogVisible: boolean
   genreListLoading: boolean
   genreList: Genre[]
+  editDialogVisible: boolean
+  editDialogSeriesId: number
   selectedContextSeries: Series | null
 }>({
   seriesList: [],
@@ -46,6 +50,8 @@ const state = reactive<{
   createDialogVisible: false,
   genreListLoading: false,
   genreList: [],
+  editDialogVisible: false,
+  editDialogSeriesId: 0,
   selectedContextSeries: null
 })
 
@@ -54,14 +60,14 @@ const defaultFormValues = reactive<{
   description: string
   yearStart: number
   yearEnd: number
-  length: number
+  episodeLength: number
   genres: string[]
 }>({
   name: '',
   description: '',
   yearStart: 0,
   yearEnd: 0,
-  length: 0,
+  episodeLength: 0,
   genres: [],
 })
 
@@ -70,7 +76,7 @@ const createFormValues = reactive<{
   description: string
   yearStart: number
   yearEnd: number
-  length: number
+  episodeLength: number
   genres: string[]
   posterFile: File | null
 }>({
@@ -78,9 +84,25 @@ const createFormValues = reactive<{
   description: '',
   yearStart: 0,
   yearEnd: 0,
-  length: 0,
+  episodeLength: 0,
   genres: [],
   posterFile: null,
+})
+
+const editFormValues = reactive<{
+  name: string
+  description: string
+  yearStart: number
+  yearEnd: number
+  episodeLength: number
+  genres: string[]
+}>({
+  name: '',
+  description: '',
+  yearStart: 0,
+  yearEnd: 0,
+  episodeLength: 0,
+  genres: []
 })
 
 watch(
@@ -165,7 +187,15 @@ const headers = computed(() => [
 const contextMenuModel = ref([
   {
     label: 'Bearbeiten',
-    icon: 'pi pi-pencil'
+    icon: 'pi pi-pencil',
+    disabled: () => {
+      return (authStore.decodedToken?.sub !== state.selectedContextSeries?.user.username) &&
+        (!authStore.roles?.includes('ADMIN'))
+    },
+    command: () => {
+      if (state.selectedContextSeries == null) return
+      showEditDialog(state.selectedContextSeries)
+    }
   }
 ])
 
@@ -290,14 +320,58 @@ const onCreateFormSubmit = async (e: { valid: boolean }) => {
   }
 }
 
+const onEditFormSubmit = async () => {
+  const editSeriesResponse = await editSeries(state.editDialogSeriesId, editFormValues)
+
+  if (editSeriesResponse === false) {
+    console.log('Failed series edit')
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler beim Bearbeiten der Serie "' + editFormValues.name + '"',
+      life: 5000
+    })
+  } else {
+    toast.add({
+      severity: 'success',
+      summary: 'Film "' + editFormValues.name + '" erfolgreich bearbeitet',
+      life: 3000
+    })
+  }
+
+  state.editDialogVisible = false
+  fetchSeries()
+}
+
 const clearCreateDialogForm = () => {
   createFormValues.name = defaultFormValues.name
   createFormValues.description = defaultFormValues.description
   createFormValues.yearStart = defaultFormValues.yearStart
   createFormValues.yearEnd = defaultFormValues.yearEnd
-  createFormValues.length = defaultFormValues.length
+  createFormValues.episodeLength = defaultFormValues.episodeLength
   createFormValues.genres = defaultFormValues.genres
   createFormValues.posterFile = null
+}
+
+const showEditDialog = (series: Series) => {
+  state.editDialogSeriesId = Number.parseInt(String(series.id), 10)
+  editFormValues.name = series.name
+  editFormValues.description = series.description ?? ''
+  editFormValues.yearStart = series.yearStart
+  editFormValues.yearEnd = series.yearEnd ?? new Date().getFullYear()
+  editFormValues.episodeLength = series.episodeLength ?? 0
+  editFormValues.genres = series.genres ?? []
+  state.editDialogVisible = true
+}
+
+const clearEditDialogForm = () => {
+  state.editDialogVisible = false
+
+  editFormValues.name = ''
+  editFormValues.description = ''
+  editFormValues.yearStart = 0
+  editFormValues.yearEnd = 0
+  editFormValues.episodeLength = 0
+  editFormValues.genres = []
 }
 
 function onPosterSelect(event: FileUploadSelectEvent) {
@@ -483,17 +557,17 @@ fetchSeries()
         <div class="field col-12 md:col-6">
           <FloatLabel variant="in">
             <InputNumber
-              v-model="createFormValues.length"
-              name="length"
+              v-model="createFormValues.episodeLength"
+              name="episodeLength"
               class="w-full"
               :useGrouping="false"
             />
             <Message
-              v-if="$createForm.length?.invalid"
+              v-if="$createForm.episodeLength?.invalid"
               severity="error"
               size="small"
               variant="simple"
-              >{{ $createForm.length.error?.message }}</Message
+              >{{ $createForm.episodeLength.error?.message }}</Message
             >
             <label for="length">Länge (Min.)</label>
           </FloatLabel>
@@ -579,6 +653,130 @@ fetchSeries()
               </div>
             </template>
           </FileUpload>
+        </div>
+        <div class="field col-6">
+          <Button type="submit" severity="success" label="Bestätigen" />
+        </div>
+      </Form>
+    </Dialog>
+
+    <!-- EDIT SERIES FORM DIALOG -->
+    <Dialog
+      @afterHide="clearEditDialogForm"
+      v-model:visible="state.editDialogVisible"
+      modal
+      header="Serie bearbeiten"
+      :style="{ width: '32rem' }"
+    >
+      <Form
+        v-slot="$editForm"
+        :resolver="resolver"
+        @submit="onEditFormSubmit"
+        class="formgrid grid"
+      >
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <InputText
+              v-model="editFormValues.name"
+              name="name"
+              class="flex-auto"
+              autocomplete="off"
+            />
+            <Message
+              v-if="$editForm.name?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $editForm.name.error?.message }}</Message
+            >
+            <label for="name">Name</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <InputNumber
+              v-model="editFormValues.yearStart"
+              name="yearStart"
+              class="flex-auto"
+              :useGrouping="false"
+            />
+            <Message
+              v-if="$editForm.yearStart?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $editForm.yearStart.error?.message }}</Message
+            >
+            <label for="yearStart">Erscheinungsjahr</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <InputNumber
+              v-model="editFormValues.yearEnd"
+              name="yearEnd"
+              class="flex-auto"
+              :useGrouping="false"
+            />
+            <Message
+              v-if="$editForm.yearEnd?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $editForm.yearEnd.error?.message }}</Message
+            >
+            <label for="yearEnd">Endjahr</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12">
+          <FloatLabel variant="in">
+            <Textarea
+              v-model="editFormValues.description"
+              name="description"
+              class="w-full"
+              rows="5"
+              style="resize: none"
+            />
+            <label for="description">Beschreibung</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <InputNumber
+              v-model="editFormValues.episodeLength"
+              name="episodeLength"
+              class="w-full"
+              :useGrouping="false"
+            />
+            <Message
+              v-if="$editForm.episodeLength?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $editForm.length.error?.message }}</Message
+            >
+            <label for="length">Länge (Min.)</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <MultiSelect
+              v-model="editFormValues.genres"
+              name="genres"
+              fluid
+              display="chip"
+              :options="state.genreList"
+              optionLabel="name"
+              optionValue="name"
+              filter
+              placeholder="Genre auswählen"
+              :maxSelectedLabels="2"
+              selectedItemsLabel="{0} Genres ausgewählt"
+              :loading="state.genreListLoading"
+              :disabled="state.genreListLoading"
+            />
+            <label for="genres">Genres</label>
+          </FloatLabel>
         </div>
         <div class="field col-6">
           <Button type="submit" severity="success" label="Bestätigen" />

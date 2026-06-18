@@ -6,6 +6,7 @@ const SERIES_ENDPOINTS = {
   pageableSeries: '/series',
   seriesById: '/series/:id',
   createSeries: '/series',
+  editSeries: '/series/:id',
   seriesFiles: '/series/:id/files',
   addRating: '/series/rating',
 }
@@ -54,6 +55,22 @@ const createNewSeries = async (body: SeriesInput) => {
   }
 }
 
+const editSeries = async (id: number, body: SeriesInput) => {
+  try {
+    let path = SERIES_ENDPOINTS.editSeries
+    if (getParamsFromPath(path)?.length) {
+      path = getPathWithParams(path, {
+        id: String(id)
+      })
+    }
+    const response = await http.put(path, body)
+    return response
+  } catch (e) {
+    console.error(e)
+    return false
+  }
+}
+
 const getSeriesFiles = async (id: string) => {
   try {
     let path = SERIES_ENDPOINTS.seriesFiles
@@ -83,5 +100,5 @@ const addRating = async (id: number, rating: number) => {
   }
 }
 
-export { getPageableSeries, getSeriesById, createNewSeries, getSeriesFiles, addRating, SERIES_ENDPOINTS }
+export { getPageableSeries, getSeriesById, createNewSeries, editSeries, getSeriesFiles, addRating, SERIES_ENDPOINTS }
 export default { getPageableSeries }

@@ -638,7 +638,7 @@ fetchMovies()
     </Dialog>
 
     <!-- EDIT MOVIE FORM DIALOG -->
-     <Dialog
+    <Dialog
       @afterHide="clearEditDialogForm"
       v-model:visible="state.editDialogVisible"
       modal
