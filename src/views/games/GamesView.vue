@@ -193,6 +193,7 @@ const headers = computed(() => [
   {
     key: 'ratingValue',
     title: 'Bewertung',
+    rating: true
   },
 ])
 
@@ -534,6 +535,10 @@ fetchGames()
           <span v-else-if="data[header.key].length > 100" v-tooltip.top="data[header.key]">{{
             capDescription(data[header.key])
           }}</span>
+          <span v-else-if="header.rating">
+            <b>{{ data[header.key] }}</b>
+            <i class="pi pi-star-fill ml-2" style="color: #dfbf13" />
+          </span>
           <span v-else>{{ data[header.key] }}</span>
         </template>
       </Column>

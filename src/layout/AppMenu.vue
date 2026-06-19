@@ -24,14 +24,14 @@ const model = ref([
     items: [
       { label: 'Alle Spiele', vicon: 'fa-gamepad', to: '/games', key: '2-0' },
       //{ label: 'Bestbewertet', icon: 'pi pi-fw pi-star', to: '/games?sortBy=ratingValue:desc' },
-      {
+      /*{
         label: 'Plattform',
         items: [
           { label: 'PC', to: '/games?platform=PC', key: '2-1-0' },
           { label: 'PSP', to: '/games?platform=PSP', key: '2-1-1' },
         ],
         key: '2-1'
-      },
+      },*/
     ],
     key: '2'
   },
@@ -43,6 +43,13 @@ const model = ref([
     ],
     key: '3'
   },
+  {
+    label: 'Rezepte',
+    items: [
+      { label: 'Alle Rezepte', vicon: 'fa-utensils', to: '/recipes', key: '4-0'},
+    ],
+    key: '4'
+  }
 ])
 </script>
 
