@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { getPageableGames, getAllGenres, getAllPlatforms, createNewGame } from '@/api/networks/games.network'
+import { getPageableGames, getAllGenres, getAllPlatforms, createNewGame, editGame } from '@/api/networks/games.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useGameStore } from '@/stores/games.store'
 import { Column, ContextMenu, DataTable, FileUpload, type DataTableRowClickEvent, type DataTableRowContextMenuEvent, type FileUploadSelectEvent } from 'primevue'
@@ -8,10 +8,12 @@ import { useRoute } from 'vue-router'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
+import { useAuthStore } from '@/stores/auth.store'
 import router from '@/router'
 import type { Game, Genre, Platform } from '@/types/common'
 
 const gameStore = useGameStore()
+const authStore = useAuthStore()
 const currentRoute = useRoute()
 const toast = useToast()
 const cm = ref()
@@ -33,6 +35,8 @@ const state = reactive<{
   genreList: Genre[]
   platformListLoading: boolean
   platformList: Platform[]
+  editDialogVisible: boolean
+  editDialogGameId: number
   selectedContextGame: Game | null
 }>({
   gameList: [],
@@ -51,6 +55,8 @@ const state = reactive<{
   genreList: [],
   platformListLoading: false,
   platformList: [],
+  editDialogVisible: false,
+  editDialogGameId: 0,
   selectedContextGame: null
 })
 
@@ -59,11 +65,13 @@ const defaultFormValues = reactive<{
   description: string
   year: number
   genres: string[]
+  platforms: string[]
 }>({
   name: '',
   description: '',
   year: 0,
   genres: [],
+  platforms: []
 })
 
 const createFormValues = reactive<{
@@ -80,6 +88,20 @@ const createFormValues = reactive<{
   genres: [],
   platforms: [],
   posterFile: null,
+})
+
+const editFormValues = reactive<{
+  name: string
+  description: string
+  year: number
+  genres: string[]
+  platforms: string[]
+}>({
+  name: '',
+  description: '',
+  year: 0,
+  genres: [],
+  platforms: []
 })
 
 watch(
@@ -171,7 +193,15 @@ const headers = computed(() => [
 const contextMenuModel = ref([
   {
     label: 'Bearbeiten',
-    icon: 'pi pi-pencil'
+    icon: 'pi pi-pencil',
+    disabled: () => {
+      return (authStore.decodedToken?.sub !== state.selectedContextGame?.user.username) &&
+        (!authStore.roles?.includes('ADMIN'))
+    },
+    command: () => {
+      if (state.selectedContextGame == null) return
+      showEditDialog(state.selectedContextGame)
+    }
   }
 ])
 
@@ -300,12 +330,54 @@ const onCreateFormSubmit = async (e: { valid: boolean }) => {
   }
 }
 
+const onEditFormSubmit = async () => {
+  const editGameResponse = await editGame(state.editDialogGameId, editFormValues)
+
+  if (editGameResponse === false) {
+    console.log('Failed series edit')
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler beim Bearbeiten des Spiels "' + editFormValues.name + '"',
+      life: 5000
+    })
+  } else {
+    toast.add({
+      severity: 'success',
+      summary: 'Spiel "' + editFormValues.name + '" erfolgreich bearbeitet',
+      life: 3000
+    })
+  }
+
+  state.editDialogVisible = false
+  fetchGames()
+}
+
 const clearCreateDialogForm = () => {
   createFormValues.name = defaultFormValues.name
   createFormValues.description = defaultFormValues.description
   createFormValues.year = defaultFormValues.year
   createFormValues.genres = defaultFormValues.genres
   createFormValues.posterFile = null
+}
+
+const showEditDialog = (game: Game) => {
+  state.editDialogGameId = Number.parseInt(String(game.id), 10)
+  editFormValues.name = game.name
+  editFormValues.description = game.description ?? ''
+  editFormValues.year = game.year
+  editFormValues.genres = game.genres ?? []
+  editFormValues.platforms = game.platforms ?? []
+  state.editDialogVisible = true
+}
+
+const clearEditDialogForm = () => {
+  state.editDialogVisible = false
+
+  editFormValues.name = ''
+  editFormValues.description = ''
+  editFormValues.year = 0
+  editFormValues.genres = []
+  editFormValues.platforms = []
 }
 
 function onPosterSelect(event: FileUploadSelectEvent) {
@@ -581,6 +653,113 @@ fetchGames()
               </div>
             </template>
           </FileUpload>
+        </div>
+        <div class="field col-6">
+          <Button type="submit" severity="success" label="Bestätigen" />
+        </div>
+      </Form>
+    </Dialog>
+
+    <!-- EDIT GAME FORM DIALOG -->
+    <Dialog
+      @afterHide="clearEditDialogForm"
+      v-model:visible="state.editDialogVisible"
+      modal
+      header="Spiel bearbeiten"
+      :style="{ width: '32rem' }"
+    >
+      <Form
+        v-slot="$editForm"
+        :resolver="resolver"
+        @submit="onEditFormSubmit"
+        class="formgrid grid"
+      >
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <InputText
+              v-model="editFormValues.name"
+              name="name"
+              class="flex-auto"
+              autocomplete="off"
+            />
+            <Message
+              v-if="$editForm.name?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $editForm.name.error?.message }}</Message>
+              <label for="name">Name</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <InputNumber
+              v-model="editFormValues.year"
+              name="year"
+              class="flex-auto"
+              :useGrouping="false"
+            />
+            <Message
+              v-if="$editForm.year?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+              >{{ $editForm.year.error?.message }}</Message
+            >
+            <label for="year">Erscheinungsjahr</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12">
+          <FloatLabel variant="in">
+            <Textarea
+              v-model="editFormValues.description"
+              name="description"
+              class="w-full"
+              rows="5"
+              style="resize: none"
+            />
+            <label for="description">Beschreibung</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <MultiSelect
+              v-model="editFormValues.genres"
+              name="genres"
+              fluid
+              display="chip"
+              :options="state.genreList"
+              optionLabel="name"
+              optionValue="name"
+              filter
+              placeholder="Genre auswählen"
+              :maxSelectedLabels="2"
+              selectedItemsLabel="{0} Genres ausgewählt"
+              :loading="state.genreListLoading"
+              :disabled="state.genreListLoading"
+            />
+            <label for="genres">Genres</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12 md:col-6">
+          <FloatLabel variant="in">
+            <MultiSelect
+              v-model="editFormValues.platforms"
+              name="platforms"
+              fluid
+              display="chip"
+              :options="state.platformList"
+              optionLabel="name"
+              optionValue="name"
+              filter
+              placeholder="Plattform auswählen"
+              :maxSelectedLabels="2"
+              selectedItemsLabel="{0} Plattformen ausgewählt"
+              :loading="state.platformListLoading"
+              :disabled="state.platformListLoading"
+            />
+            <label for="platforms">Plattformen</label>
+          </FloatLabel>
         </div>
         <div class="field col-6">
           <Button type="submit" severity="success" label="Bestätigen" />

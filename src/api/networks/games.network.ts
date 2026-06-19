@@ -8,6 +8,7 @@ const GAMES_ENDPOINTS = {
   allGenres: '/genres/games',
   allPlatforms: '/platforms',
   createGame: '/games',
+  editGame: '/games/:id',
   gameFiles: '/games/:id/files',
   addRating: '/games/rating',
 }
@@ -76,6 +77,22 @@ const createNewGame = async (body: GameInput) => {
   }
 }
 
+const editGame = async (id: number, body: GameInput) => {
+  try {
+    let path = GAMES_ENDPOINTS.editGame
+    if (getParamsFromPath(path)?.length) {
+      path = getPathWithParams(path, {
+        id: String(id)
+      })
+    }
+    const response = await http.put(path, body)
+    return response
+  } catch (e) {
+    console.error(e)
+    return false
+  }
+}
+
 const getGameFiles = async (id: string) => {
   try {
     let path = GAMES_ENDPOINTS.gameFiles
@@ -105,5 +122,5 @@ const addRating = async (id: number, rating: number) => {
   }
 }
 
-export { getPageableGames, getGameById, getAllGenres, getAllPlatforms, createNewGame, getGameFiles, addRating, GAMES_ENDPOINTS }
+export { getPageableGames, getGameById, getAllGenres, getAllPlatforms, createNewGame, editGame, getGameFiles, addRating, GAMES_ENDPOINTS }
 export default { getPageableGames }

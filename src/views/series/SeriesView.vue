@@ -333,7 +333,7 @@ const onEditFormSubmit = async () => {
   } else {
     toast.add({
       severity: 'success',
-      summary: 'Film "' + editFormValues.name + '" erfolgreich bearbeitet',
+      summary: 'Serie "' + editFormValues.name + '" erfolgreich bearbeitet',
       life: 3000
     })
   }
