@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { getPageableSeries, createNewSeries, editSeries } from '@/api/networks/series.network'
+import { getPageableSeries, createNewSeries, editSeries, deleteSeries } from '@/api/networks/series.network'
 import { getAllGenres } from '@/api/networks/movies.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useSeriesStore } from '@/stores/series.store'
@@ -35,6 +35,9 @@ const state = reactive<{
   genreList: Genre[]
   editDialogVisible: boolean
   editDialogSeriesId: number
+  deleteDialogVisible: boolean
+  deleteDialogSeriesName: string
+  deleteDialogSeriesId: number
   selectedContextSeries: Series | null
 }>({
   seriesList: [],
@@ -52,6 +55,9 @@ const state = reactive<{
   genreList: [],
   editDialogVisible: false,
   editDialogSeriesId: 0,
+  deleteDialogVisible: false,
+  deleteDialogSeriesName: '',
+  deleteDialogSeriesId: 0,
   selectedContextSeries: null
 })
 
@@ -195,6 +201,22 @@ const contextMenuModel = ref([
     command: () => {
       if (state.selectedContextSeries == null) return
       showEditDialog(state.selectedContextSeries)
+    }
+  },
+  {
+    separator: true
+  },
+  {
+    label: 'Löschen',
+    icon: 'pi pi-trash',
+    color: '#c73c3c',
+    disabled: () => {
+      return (authStore.decodedToken?.sub !== state.selectedContextSeries?.user.username) &&
+        (!authStore.roles?.includes('ADMIN'))
+    },
+    command: () => {
+      if (state.selectedContextSeries == null) return
+      showDeleteDialog(state.selectedContextSeries)
     }
   }
 ])
@@ -342,6 +364,27 @@ const onEditFormSubmit = async () => {
   fetchSeries()
 }
 
+const onDeleteFormSubmit = async () => {
+  const deleteSeriesResponse = await deleteSeries(state.deleteDialogSeriesId)
+
+  if (deleteSeriesResponse === false) {
+    console.log('Failed series deletion')
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler beim Löschen der Serie "' + state.deleteDialogSeriesName + '"',
+      life: 5000
+    })
+  } else {
+    toast.add({
+      severity: 'success',
+      summary: 'Serie "' + state.deleteDialogSeriesName + '" erfolgreich gelöscht',
+      life: 3000
+    })
+  }
+  state.deleteDialogVisible = false
+  fetchSeries()
+}
+
 const clearCreateDialogForm = () => {
   createFormValues.name = defaultFormValues.name
   createFormValues.description = defaultFormValues.description
@@ -374,6 +417,12 @@ const clearEditDialogForm = () => {
   editFormValues.genres = []
 }
 
+const showDeleteDialog = async (series: Series) => {
+  state.deleteDialogSeriesName = series.name
+  state.deleteDialogSeriesId = series.id
+  state.deleteDialogVisible = true
+}
+
 function onPosterSelect(event: FileUploadSelectEvent) {
   createFormValues.posterFile = event.files[0]
 }
@@ -391,7 +440,7 @@ fetchSeries()
     <div class="font-semibold text-xl mb-4">Serien</div>
     <ContextMenu ref="cm" :model="contextMenuModel" @hide="state.selectedContextSeries = null">
       <template #item="{ item, props }">
-        <a class="flex items-center" v-bind="props.action">
+        <a class="flex items-center" v-bind="props.action" :style="{ 'background-color': item.color, 'border-radius': '2px' }">
           <span :class="item.icon" />
           <span class="ml-2">{{ item.label }}</span>
         </a>
@@ -782,6 +831,31 @@ fetchSeries()
           <Button type="submit" severity="success" label="Bestätigen" />
         </div>
       </Form>
+    </Dialog>
+
+    <!-- DELETE SERIES FORM DIALOG -->
+    <Dialog
+      v-model:visible="state.deleteDialogVisible"
+      modal
+      header="Serie löschen"
+      :closable="false"
+      :style="{ width: '32rem' }"
+    >
+      <div class="flex flex-col gap-4">
+        <p>Möchten Sie die Serie "{{ state.deleteDialogSeriesName }}" wirklich löschen?</p>
+        <div class="flex justify-end gap-2">
+          <Button
+            label="Abbrechen"
+            severity="secondary"
+            @click="state.deleteDialogVisible = false"
+          />
+          <Button
+            label="Löschen"
+            severity="danger"
+            @click="onDeleteFormSubmit"
+          />
+        </div>
+      </div>
     </Dialog>
   </div>
 </template>

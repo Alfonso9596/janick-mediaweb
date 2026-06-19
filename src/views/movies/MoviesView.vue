@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { getPageableMovies, getAllGenres, createNewMovie, editMovie } from '@/api/networks/movies.network'
+import { getPageableMovies, getAllGenres, createNewMovie, editMovie, deleteMovie } from '@/api/networks/movies.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useMovieStore } from '@/stores/movies.store'
 import { Column, ContextMenu, DataTable, FileUpload, type DataTableRowClickEvent, type DataTableRowContextMenuEvent, type FileUploadSelectEvent } from 'primevue'
@@ -34,6 +34,9 @@ const state = reactive<{
   genreList: Genre[]
   editDialogVisible: boolean
   editDialogMovieId: number
+  deleteDialogVisible: boolean
+  deleteDialogMovieName: string
+  deleteDialogMovieId: number
   selectedContextMovie: Movie | null
 }>({
   movieList: [],
@@ -51,6 +54,9 @@ const state = reactive<{
   genreList: [],
   editDialogVisible: false,
   editDialogMovieId: 0,
+  deleteDialogVisible: false,
+  deleteDialogMovieName: '',
+  deleteDialogMovieId: 0,
   selectedContextMovie: null
 })
 
@@ -193,6 +199,22 @@ const contextMenuModel = ref([
     command: () => {
       if (state.selectedContextMovie == null) return
       showEditDialog(state.selectedContextMovie)
+    }
+  },
+  {
+    separator: true
+  },
+  {
+    label: 'Löschen',
+    icon: 'pi pi-trash',
+    color: '#c73c3c',
+    disabled: () => {
+      return (authStore.decodedToken?.sub !== state.selectedContextMovie?.user.username) &&
+        (!authStore.roles?.includes('ADMIN'))
+    },
+    command: () => {
+      if (state.selectedContextMovie == null) return
+      showDeleteDialog(state.selectedContextMovie)
     }
   }
 ])
@@ -340,6 +362,27 @@ const onEditFormSubmit = async () => {
   fetchMovies()
 }
 
+const onDeleteFormSubmit = async () => {
+  const deleteMovieResponse = await deleteMovie(state.deleteDialogMovieId)
+
+  if (deleteMovieResponse === false) {
+    console.log('Failed movie deletion')
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler beim Löschen des Films "' + state.deleteDialogMovieName + '"',
+      life: 5000
+    })
+  } else {
+    toast.add({
+      severity: 'success',
+      summary: 'Film "' + state.deleteDialogMovieName + '" erfolgreich gelöscht',
+      life: 3000
+    })
+  }
+  state.deleteDialogVisible = false
+  fetchMovies()
+}
+
 const clearCreateDialogForm = () => {
   createFormValues.name = defaultFormValues.name
   createFormValues.description = defaultFormValues.description
@@ -369,6 +412,12 @@ const clearEditDialogForm = () => {
   editFormValues.genres = []
 }
 
+const showDeleteDialog = async (movie: Movie) => {
+  state.deleteDialogMovieName = movie.name
+  state.deleteDialogMovieId = movie.id
+  state.deleteDialogVisible = true
+}
+
 function onPosterSelect(event: FileUploadSelectEvent) {
   createFormValues.posterFile = event.files[0]
 }
@@ -386,7 +435,7 @@ fetchMovies()
     <div class="font-semibold text-xl mb-4">Filme</div>
     <ContextMenu ref="cm" :model="contextMenuModel" @hide="state.selectedContextMovie = null">
       <template #item="{ item, props }">
-        <a class="flex items-center" v-bind="props.action">
+        <a class="flex items-center" v-bind="props.action" :style="{ 'background-color': item.color, 'border-radius': '2px' }">
           <span :class="item.icon" />
           <span class="ml-2">{{ item.label }}</span>
         </a>
@@ -741,6 +790,31 @@ fetchMovies()
           <Button type="submit" severity="success" label="Bestätigen" />
         </div>
       </Form>
+    </Dialog>
+
+    <!-- DELETE MOVIE FORM DIALOG -->
+    <Dialog
+      v-model:visible="state.deleteDialogVisible"
+      modal
+      header="Film löschen"
+      :closable="false"
+      :style="{ width: '32rem' }"
+    >
+      <div class="flex flex-col gap-4">
+        <p>Möchten Sie den Film "{{ state.deleteDialogMovieName }}" wirklich löschen?</p>
+        <div class="flex justify-end gap-2">
+          <Button
+            label="Abbrechen"
+            severity="secondary"
+            @click="state.deleteDialogVisible = false"
+          />
+          <Button
+            label="Löschen"
+            severity="danger"
+            @click="onDeleteFormSubmit"
+          />
+        </div>
+      </div>
     </Dialog>
   </div>
 </template>

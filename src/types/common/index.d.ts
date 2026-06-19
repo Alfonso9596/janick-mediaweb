@@ -27,7 +27,7 @@ type FileItem = {
 }
 
 type Movie = {
-  id: string | number
+  id: number
   name: string
   year: number
   posterFilepath?: string
@@ -40,7 +40,7 @@ type Movie = {
 }
 
 type Series = {
-  id: string | number
+  id: number
   name: string
   yearStart: number
   yearEnd?: number
@@ -54,7 +54,7 @@ type Series = {
 }
 
 type Game = {
-  id: string | number
+  id: number
   name: string
   year: number
   posterFilepath?: string

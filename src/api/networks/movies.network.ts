@@ -7,6 +7,7 @@ const MOVIES_ENDPOINTS = {
   movieById: '/movies/:id',
   allGenres: '/genres/movies',
   createMovie: '/movies',
+  deleteMovie: '/movies/:id',
   editMovie: '/movies/:id',
   movieFiles: '/movies/:id/files',
   addRating: '/movies/rating',
@@ -66,6 +67,22 @@ const createNewMovie = async (body: MovieInput) => {
   }
 }
 
+const deleteMovie = async (id: number) => {
+  try {
+    let path = MOVIES_ENDPOINTS.deleteMovie
+    if (getParamsFromPath(path)?.length) {
+      path = getPathWithParams(path, {
+        id: String(id)
+      })
+    }
+    const response = await http.delete(path)
+    return response
+  } catch (e) {
+    console.error(e)
+    return false
+  }
+}
+
 const editMovie = async (id: number, body: MovieInput) => {
   try {
     let path = MOVIES_ENDPOINTS.editMovie
@@ -116,6 +133,7 @@ export {
   getMovieById,
   getAllGenres,
   createNewMovie,
+  deleteMovie,
   editMovie,
   getMovieFiles,
   addRating,

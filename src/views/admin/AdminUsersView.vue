@@ -102,8 +102,8 @@ const contextMenuModel = ref([
   {
     label: 'Löschen',
     icon: 'pi pi-trash',
-    disabled: () => authStore.decodedToken?.sub === state.selectedContextUser?.username,
     color: '#c73c3c',
+    disabled: () => authStore.decodedToken?.sub === state.selectedContextUser?.username,
     command: () => {
       if (state.selectedContextUser == null) return
       showDeleteUserDialog(state.selectedContextUser)
@@ -595,6 +595,7 @@ fetchRoleList()
       v-model:visible="state.deleteDialogVisible"
       modal
       header="Benutzer löschen"
+      :closable="false"
       :style="{ width: '32rem' }"
     >
       <div class="flex flex-col gap-4">
