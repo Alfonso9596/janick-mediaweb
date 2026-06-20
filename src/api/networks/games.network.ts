@@ -5,8 +5,6 @@ import type { GameInput } from '@/types/common'
 const GAMES_ENDPOINTS = {
   pageabelGames: '/games',
   gameById: '/games/:id',
-  allGenres: '/genres/games',
-  allPlatforms: '/platforms',
   createGame: '/games',
   deleteGame: '/games/:id',
   editGame: '/games/:id',
@@ -41,26 +39,6 @@ const getGameById = async (id: string) => {
       })
     }
     const response = await http.get(path)
-    return response?.data
-  } catch (e) {
-    console.error(e)
-    return false
-  }
-}
-
-const getAllGenres = async () => {
-  try {
-    const response = await http.get(GAMES_ENDPOINTS.allGenres)
-    return response?.data
-  } catch (e) {
-    console.error(e)
-    return false
-  }
-}
-
-const getAllPlatforms = async () => {
-  try {
-    const response = await http.get(GAMES_ENDPOINTS.allPlatforms)
     return response?.data
   } catch (e) {
     console.error(e)
@@ -139,5 +117,5 @@ const addRating = async (id: number, rating: number) => {
   }
 }
 
-export { getPageableGames, getGameById, getAllGenres, getAllPlatforms, createNewGame, deleteGame, editGame, getGameFiles, addRating, GAMES_ENDPOINTS }
+export { getPageableGames, getGameById, createNewGame, deleteGame, editGame, getGameFiles, addRating, GAMES_ENDPOINTS }
 export default { getPageableGames }

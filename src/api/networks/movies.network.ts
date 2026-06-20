@@ -5,7 +5,6 @@ import type { MovieInput } from '@/types/common'
 const MOVIES_ENDPOINTS = {
   pageableMovies: '/movies',
   movieById: '/movies/:id',
-  allGenres: '/genres/movies',
   createMovie: '/movies',
   deleteMovie: '/movies/:id',
   editMovie: '/movies/:id',
@@ -40,16 +39,6 @@ const getMovieById = async (id: string) => {
       })
     }
     const response = await http.get(path)
-    return response?.data
-  } catch (e) {
-    console.error(e)
-    return false
-  }
-}
-
-const getAllGenres = async () => {
-  try {
-    const response = await http.get(MOVIES_ENDPOINTS.allGenres)
     return response?.data
   } catch (e) {
     console.error(e)
@@ -131,7 +120,6 @@ const addRating = async (id: number, rating: number) => {
 export {
   getPageableMovies,
   getMovieById,
-  getAllGenres,
   createNewMovie,
   deleteMovie,
   editMovie,

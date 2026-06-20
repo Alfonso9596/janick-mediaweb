@@ -17,6 +17,10 @@ type Role = {
   name: string
 }
 
+type RoleInput = {
+  name: string
+}
+
 type FileItem = {
   key?: string
   name: string
@@ -101,4 +105,12 @@ type Platform = {
   name: string
 }
 
-export { User, UserInput, Role, FileItem, Movie, Series, Game, MovieInput, SeriesInput, GameInput, Genre, Platform }
+type GenreInput = {
+  name: string
+}
+
+type PlatformInput = {
+  name: string
+}
+
+export { User, UserInput, Role, RoleInput, FileItem, Movie, Series, Game, MovieInput, SeriesInput, GameInput, Genre, Platform, GenreInput, PlatformInput }

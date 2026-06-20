@@ -7,8 +7,12 @@ import { all } from 'primelocale'
 import { httpInterceptor } from './api/httpInterceptor'
 import { OhVueIcon, addIcons } from 'oh-vue-icons'
 import {
+  FaBlackTie,
+  FaBuffer,
   FaFilm,
   FaGamepad,
+  FaHome,
+  FaList,
   FaMusic,
   FaTv,
   FaUser,
@@ -16,7 +20,7 @@ import {
   FaUtensils,
 } from 'oh-vue-icons/icons/fa'
 
-addIcons(FaFilm, FaGamepad, FaMusic, FaTv, FaUser, FaUserShield, FaUtensils)
+addIcons(FaBlackTie, FaBuffer, FaFilm, FaGamepad, FaHome, FaList, FaMusic, FaTv, FaUser, FaUserShield, FaUtensils)
 
 import App from './App.vue'
 import router from './router'

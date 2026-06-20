@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { getPageableGames, getAllGenres, getAllPlatforms, createNewGame, editGame, deleteGame } from '@/api/networks/games.network'
+import { getPageableGames, createNewGame, editGame, deleteGame } from '@/api/networks/games.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useGameStore } from '@/stores/games.store'
 import { Column, ContextMenu, DataTable, FileUpload, type DataTableRowClickEvent, type DataTableRowContextMenuEvent, type FileUploadSelectEvent } from 'primevue'
@@ -11,6 +11,8 @@ import { useToast } from 'primevue/usetoast'
 import { useAuthStore } from '@/stores/auth.store'
 import router from '@/router'
 import type { Game, Genre, Platform } from '@/types/common'
+import { getAllGameGenres } from '@/api/networks/genres.network'
+import { getAllGamePlatforms } from '@/api/networks/platforms.network'
 
 const gameStore = useGameStore()
 const authStore = useAuthStore()
@@ -261,14 +263,14 @@ const fetchGames = async () => {
 
 const fetchGenreList = async () => {
   state.genreListLoading = true
-  const response = await getAllGenres()
+  const response = await getAllGameGenres()
   state.genreList = response
   state.genreListLoading = false
 }
 
 const fetchPlatformList = async () => {
   state.platformListLoading = true
-  const response = await getAllPlatforms()
+  const response = await getAllGamePlatforms()
   state.platformList = response
   state.platformListLoading = false
 }

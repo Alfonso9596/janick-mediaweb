@@ -5,27 +5,31 @@ import AppMenuItem from '@/layout/AppMenuItem.vue'
 const model = ref([
   {
     label: 'Dashboard',
-    items: [{ label: 'Übersicht', icon: 'pi pi-fw pi-home', to: '/admin', key: '0-0' }],
+    items: [{ label: 'Übersicht', vicon: 'fa-home', to: '/admin', key: '0-0' }],
     key: '0'
   },
   {
     label: 'Benutzerverwaltung',
     items: [
-      { label: 'Alle Benutzer', icon: 'pi pi-fw pi-users', to: '/admin/users', key: '1-0' },
+      { label: 'Alle Benutzer', vicon: 'fa-user', to: '/admin/users/all', key: '1-0' }
     ],
     key: '1'
   },
   {
-    label: 'Inhaltsverwaltung',
+    label: 'Filme & Serien',
     items: [
-      { label: 'Filme verwalten', vicon: 'fa-film', to: '/admin/movies' },
-      { label: 'Serien verwalten', vicon: 'fa-tv', to: '/admin/series' },
-      { label: 'Spiele verwalten', vicon: 'fa-gamepad', to: '/admin/games' },
-      { label: 'Musik verwalten', vicon: 'fa-music', to: '/admin/music' },
-      { label: 'Rezepte verwalten', vicon: 'fa-utensils', to: '/admin/recipes' },
+      { label: 'Genres verwalten', vicon: 'fa-list', to: '/admin/movies/genres', key: '2-0' }
     ],
     key: '2'
   },
+  {
+    label: 'Spiele',
+    items: [
+      { label: 'Genres verwalten', vicon: 'fa-list', to: '/admin/games/genres', key: '3-0' },
+      { label: 'Plattformen verwalten', vicon: 'fa-buffer', to: '/admin/games/platforms', key: '3-1'}
+    ],
+    key: '3'
+  }
 ])
 </script>
 

@@ -183,6 +183,7 @@ const onCreateUserFormSubmit = async (e: { valid: boolean}) => {
         summary: 'Benutzer "' + createUserFormValues.username + '" existiert bereits',
         life: 5000,
       })
+      return
     }
     toast.add({
       severity: 'success',
@@ -295,6 +296,8 @@ const fetchUsers = async () => {
   const params = {
     pageSize: String(state.pageSize),
     page: String(state.page),
+    sortBy: state.sortBy,
+    sortDir: state.sortDir,
     username: state.searchName ? state.searchName : '',
     role: state.searchRole ? state.searchRole : '',
   }

@@ -57,6 +57,7 @@ const routes = [
   {
     path: '/admin',
     component: AdminLayout,
+    meta: { requiresAuth: true, roles: ['ADMIN'] },
     children: [
       {
         path: '/admin',
@@ -64,10 +65,25 @@ const routes = [
         meta: { requiresAuth: true, roles: ['ADMIN'] },
       },
       {
-        path: '/admin/users',
-        component: () => import('@/views/admin/AdminUsersView.vue'),
+        path: '/admin/users/all',
+        component: () => import('@/views/admin/users/AdminUsersView.vue'),
         meta: { requiresAuth: true, roles: ['ADMIN'] },
       },
+      {
+        path: '/admin/movies/genres',
+        component: () => import('@/views/admin/movies/AdminMovieGenreView.vue'),
+        meta: { requiresAuth: true, roles: ['ADMIN'] }
+      },
+      {
+        path: '/admin/games/genres',
+        component: () => import('@/views/admin/games/AdminGameGenreView.vue'),
+        meta: { requiresAuth: true, roles: ['ADMIN'] }
+      },
+      {
+        path: '/admin/games/platforms',
+        component: () => import('@/views/admin/games/AdminGamePlatformView.vue'),
+        meta: { requiresAuth: true, roles: ['ADMIN'] }
+      }
     ],
   },
   // Error Pages

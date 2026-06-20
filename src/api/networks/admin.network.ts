@@ -8,7 +8,7 @@ const ADMIN_ENDPOINTS = {
   createUser: '/admin/users',
   deleteUser: '/admin/users/:id',
   editUser: '/admin/users/:id',
-  allRoles: '/admin/roles',
+  allRoles: '/admin/roles/list',
   allMovies: '/admin/movies',
   allSeries: '/admin/series',
   allGames: '/admin/games',

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { getPageableMovies, getAllGenres, createNewMovie, editMovie, deleteMovie } from '@/api/networks/movies.network'
+import { getPageableMovies, createNewMovie, editMovie, deleteMovie } from '@/api/networks/movies.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useMovieStore } from '@/stores/movies.store'
 import { Column, ContextMenu, DataTable, FileUpload, type DataTableRowClickEvent, type DataTableRowContextMenuEvent, type FileUploadSelectEvent } from 'primevue'
@@ -11,6 +11,7 @@ import { useToast } from 'primevue/usetoast'
 import router from '@/router'
 import type { Movie, Genre } from '@/types/common'
 import { useAuthStore } from '@/stores/auth.store'
+import { getAllMovieGenres } from '@/api/networks/genres.network'
 
 const movieStore = useMovieStore()
 const authStore = useAuthStore()
@@ -251,7 +252,7 @@ const fetchMovies = async () => {
 
 const fetchGenreList = async () => {
   state.genreListLoading = true
-  const response = await getAllGenres()
+  const response = await getAllMovieGenres()
   state.genreList = response
   state.genreListLoading = false
 }
