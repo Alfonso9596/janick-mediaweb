@@ -44,6 +44,16 @@ const userMenuItems = ref([
         icon: 'pi pi-users',
         command: () => router.push('/admin/users')
       },
+      {
+        label: 'Filme & Serien',
+        vicon: 'fa-tv',
+        command: () => router.push('/admin/movies/genres')
+      },
+      {
+        label: 'Spiele',
+        vicon: 'fa-gamepad',
+        command: () => router.push('/admin/games/genres')
+      }
     ],
   },
   {
@@ -271,7 +281,8 @@ function onDarkThemeChange() {
                   </template>
                   <template #item="{ item, props }">
                     <a v-ripple class="flex items-center" v-bind="props.action">
-                      <span :class="item.icon" />
+                      <v-icon v-if="item.vicon" :name="item.vicon" />
+                      <i v-else :class="item.icon" style="margin-left: 2.6px; margin-right: 2.6px;" />
                       <span>{{ item.label }}</span>
                     </a>
                   </template>

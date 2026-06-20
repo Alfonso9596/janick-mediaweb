@@ -2,6 +2,7 @@
 import { getAllGames } from '@/api/networks/admin.network'
 import { onMounted, reactive, ref, watch } from 'vue'
 import type { Game } from '@/types/common'
+import router from '@/router'
 
 const state = reactive<{
   gameList: Game[]
@@ -45,7 +46,7 @@ watch(
 </script>
 
 <template>
-  <div class="card">
+  <div class="card cursor-pointer" @click="router.push('/games')">
     <div class="flex justify-between mb-4">
       <div>
         <span class="block text-muted-color font-medium mb-4">Spiele</span>

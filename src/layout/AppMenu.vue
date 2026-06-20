@@ -38,7 +38,7 @@ const model = ref([
   {
     label: 'Musik',
     items: [
-      { label: 'Alle Alben', vicon: 'fa-music', to: '/music', key: '3-0' },
+      { label: 'Alle Musik', vicon: 'fa-music', to: '/music', key: '3-0' },
       //{ label: 'Bestbewertet', icon: 'pi pi-fw pi-star', to: '/music?sortBy=ratingValue:desc' },
     ],
     key: '3'
