@@ -202,7 +202,7 @@ const contextMenuModel = ref([
     label: 'Bearbeiten',
     icon: 'pi pi-pencil',
     disabled: () => {
-      return (authStore.decodedToken?.sub !== state.selectedContextGame?.user.username) &&
+      return (authStore.decodedToken?.sub !== state.selectedContextGame?.user?.username) &&
         (!authStore.roles?.includes('ADMIN'))
     },
     command: () => {
@@ -218,7 +218,7 @@ const contextMenuModel = ref([
     icon: 'pi pi-trash',
     color: '#c73c3c',
     disabled: () => {
-      return (authStore.decodedToken?.sub !== state.selectedContextGame?.user.username) &&
+      return (authStore.decodedToken?.sub !== state.selectedContextGame?.user?.username) &&
         (!authStore.roles?.includes('ADMIN'))
     },
     command: () => {

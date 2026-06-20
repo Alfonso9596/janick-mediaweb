@@ -36,7 +36,7 @@ type Movie = {
   genres?: string[]
   ratingAmount: number
   ratingValue: number
-  user: User
+  user?: User
 }
 
 type Series = {
@@ -50,7 +50,7 @@ type Series = {
   genres?: string[]
   ratingAmount: number
   ratingValue: number
-  user: User
+  user?: User
 }
 
 type Game = {
@@ -63,7 +63,7 @@ type Game = {
   platforms?: string[]
   ratingAmount: number
   ratingValue: number
-  user: User
+  user?: User
 }
 
 type MovieInput = {

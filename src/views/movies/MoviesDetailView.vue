@@ -6,6 +6,7 @@ import RatingOverview from '@/components/RatingOverview.vue'
 import TreeStructure from '@/components/TreeStructure.vue'
 import { Chip, useToast } from 'primevue'
 import type { FileItem, Movie } from '@/types/common'
+import router from '@/router'
 
 const currentRoute = useRoute()
 const toast = useToast()
@@ -16,7 +17,7 @@ const state = reactive<{
   loading: boolean
 }>({
   movie: {
-    id: '',
+    id: 0,
     name: '',
     year: 0,
     posterFilepath: undefined,
@@ -74,9 +75,10 @@ onBeforeMount(() => {
   <div class="card">
     <div class="grid grid-cols-4 gap-2" style="display: grid">
       <div class="col-span-4" style="font-size: 1.5rem">
+        <i @click="router.go(-1)" class="pi pi-chevron-left mr-4 cursor-pointer"></i>
         {{ state.movie.name }} ({{ state.movie.year }})<i
-          class="pi pi-heart"
-          style="color: #ea0c74; margin-left: 1rem"
+          class="pi pi-heart ml-4"
+          style="color: #ea0c74"
         ></i>
       </div>
       <div class="col-span-4">

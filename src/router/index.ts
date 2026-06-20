@@ -76,6 +76,11 @@ const routes = [
     name: 'Unauthorized',
     component: () => import('@/views/errors/UnauthorizedPage.vue'),
   },
+  {
+    path: '/:notFound',
+    name: 'NotFound',
+    component: () => import('@/views/errors/NotFoundPage.vue'),
+  }
 ]
 
 const router = createRouter({

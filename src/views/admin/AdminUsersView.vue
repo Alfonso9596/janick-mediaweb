@@ -250,7 +250,6 @@ const clearCreateDialogForm = () => {
 }
 
 const showEditUserDialog = (user: User) => {
-  console.log(user.enabled)
   state.editDialogUserId = user.id
   editUserFormValues.username = user.username
   editUserFormValues.password = ''
