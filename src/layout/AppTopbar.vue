@@ -42,7 +42,7 @@ const userMenuItems = ref([
       {
         label: 'Benutzerverwaltung',
         icon: 'pi pi-users',
-        command: () => router.push('/admin/users')
+        command: () => router.push('/admin/users/all')
       },
       {
         label: 'Filme & Serien',
@@ -60,7 +60,7 @@ const userMenuItems = ref([
     label: 'Profil',
     items: [
       {
-        label: 'Einstellungen',
+        label: 'Password ändern',
         icon: 'pi pi-cog',
       },
       {

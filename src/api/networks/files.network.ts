@@ -3,6 +3,7 @@ import { getParamsFromPath, getPathWithParams } from '@/helpers/url.helper'
 
 const FILES_ENDPOINTS = {
   uploadPoster: '/files/uploadPoster?mediaType=:mediaType',
+  uploadFile: '/files?mediaType=:mediaType'
 }
 
 const uploadNewPoster = async (file: File, mediaType: string, title: string, year: string) => {
@@ -27,5 +28,26 @@ const uploadNewPoster = async (file: File, mediaType: string, title: string, yea
   }
 }
 
-export { uploadNewPoster, FILES_ENDPOINTS }
+const uploadFile = async (file: File, mediaType: string, mediaId: number) => {
+  try {
+    let path = FILES_ENDPOINTS.uploadFile
+    if (getParamsFromPath(path)?.length) {
+      path = getPathWithParams(path, {
+        mediaType
+      })
+    }
+    const formData = new FormData()
+
+    formData.append('mediaId', String(mediaId))
+    formData.append('file', file)
+
+    const response = await httpForm.post(path, formData)
+    return response
+  } catch (e) {
+    console.error(e)
+    return false
+  }
+}
+
+export { uploadNewPoster, uploadFile, FILES_ENDPOINTS }
 export default { uploadNewPoster }

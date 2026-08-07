@@ -65,6 +65,10 @@ const setRating = async (rating: number) => {
   }
 }
 
+const fileUpload = () => {
+  fetchGameFiles()
+}
+
 onBeforeMount(() => {
   fetchGameById()
   fetchGameFiles()
@@ -100,10 +104,18 @@ onBeforeMount(() => {
           <Chip class="mr-2" v-for="genre in state.game.genres" :key="genre" :label="genre" />
         </div>
         <div class="col-span-2">
+          <span class="mr-2">Plattformen:</span>
           <Chip class="mr-2" v-for="platform in state.game.platforms" :key="platform" :label="platform" />
         </div>
       </div>
-      <TreeStructure :files="state.files" :loading="state.loading" />
+      <TreeStructure
+        @fileUpload="fileUpload"
+        :files="state.files"
+        :loading="state.loading"
+        :fileUploadTitle="`Datei für ${state.game.name} hochladen`"
+        :mediaId="state.game.id"
+        mediaType="GAME"
+      />
     </div>
   </div>
 </template>

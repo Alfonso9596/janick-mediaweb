@@ -66,6 +66,10 @@ const setRating = async (rating: number) => {
   }
 }
 
+const fileUpload = () => {
+  fetchSeriesFiles()
+}
+
 onBeforeMount(() => {
   fetchSeriesById()
   fetchSeriesFiles()
@@ -101,7 +105,14 @@ onBeforeMount(() => {
           <Chip class="mr-2" v-for="genre in state.series.genres" :key="genre" :label="genre" />
         </div>
       </div>
-      <TreeStructure :files="state.files" :loading="state.loading" />
+      <TreeStructure
+        @file-upload="fileUpload"
+        :files="state.files"
+        :loading="state.loading"
+        :fileUploadTitle="`Datei für ${state.series.name} hochladen`"
+        :mediaId="state.series.id"
+        mediaType="SERIES"
+      />
     </div>
   </div>
 </template>
