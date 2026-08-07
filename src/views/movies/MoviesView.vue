@@ -542,7 +542,7 @@ fetchMovies()
             <InputText
               v-model="createFormValues.name"
               name="name"
-              class="flex-auto"
+              class="flex-auto w-full"
               autocomplete="off"
             />
             <Message
@@ -560,7 +560,7 @@ fetchMovies()
             <InputNumber
               v-model="createFormValues.year"
               name="year"
-              class="flex-auto"
+              class="flex-auto w-full"
               :useGrouping="false"
             />
             <Message
@@ -710,7 +710,7 @@ fetchMovies()
             <InputText
               v-model="editFormValues.name"
               name="name"
-              class="flex-auto"
+              class="flex-auto w-full"
               autocomplete="off"
             />
             <Message
@@ -728,7 +728,7 @@ fetchMovies()
             <InputNumber
               v-model="editFormValues.year"
               name="year"
-              class="flex-auto"
+              class="flex-auto w-full"
               :useGrouping="false"
             />
             <Message

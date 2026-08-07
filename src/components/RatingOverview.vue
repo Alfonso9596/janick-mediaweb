@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Star, StarFill } from '@primeicons/vue'
 const props = defineProps({
   item: {
     type: Object,
@@ -8,14 +9,23 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const emitRating = (event: { value: number }) => {
-  emit('update:modelValue', event.value)
+const emitRating = (event: { value: number | null }) => {
+  if (event.value !== null) {
+    emit('update:modelValue', event.value)
+  }
 }
 </script>
 
 <template>
   <div class="rating-overview mb-4" style="display: flex">
-    <Rating @change="emitRating" :model-value="props.item.ratingValue" />
+    <Rating @change="emitRating" :model-value="props.item.ratingValue" allowHalf>
+      <template #onicon>
+        <StarFill color="yellow" />
+      </template>
+      <template #officon>
+        <Star color="gray" />
+      </template>
+    </Rating>
     <p class="ml-3 pt-1">
       {{ props.item.ratingValue }}/5 ({{ props.item.ratingAmount }} Bewertungen)
     </p>

@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 import RatingOverview from '@/components/RatingOverview.vue'
 import TreeStructure from '@/components/TreeStructure.vue'
 import { Chip, useToast } from 'primevue'
+import { ArrowLeft } from '@primeicons/vue'
 import type { FileItem, Game } from '@/types/common'
 import router from '@/router'
 
@@ -79,7 +80,15 @@ onBeforeMount(() => {
   <div class="card">
     <div class="grid grid-cols-4 gap-2" style="display: grid">
       <div class="col-span-4" style="font-size: 1.5rem">
-        <i @click="router.go(-1)" class="pi pi-chevron-left mr-4 cursor-pointer"></i>
+        <Button
+          @click="router.go(-1)"
+          iconOnly
+          rounded
+          aria-label="Zurück"
+          class="mr-2"
+        >
+          <ArrowLeft />
+        </Button>
         {{ state.game.name }} ({{ state.game.year }})<i
           class="pi pi-heart ml-4"
           style="color: #ea0c74"

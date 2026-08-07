@@ -1,5 +1,6 @@
 import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
+import { registerLicense } from '@primeui/license-manager'
 import { StyleClass, Tooltip, ToastService } from 'primevue'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
@@ -29,6 +30,10 @@ import '@/assets/styles.scss'
 
 const pinia = createPinia()
 const app = createApp(App)
+
+if (import.meta.env.VITE_PRIME_LICENSE) {
+  registerLicense({ primeui: import.meta.env.VITE_PRIME_LICENSE })
+}
 
 app.directive('styleclass', StyleClass)
 app.directive('tooltip', Tooltip)

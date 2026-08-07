@@ -8,6 +8,9 @@ import Nora from '@primeuix/themes/nora'
 import { onBeforeMount, ref } from 'vue'
 import { SelectButton } from 'primevue'
 
+type ThemeType = 'primary' | 'surface'
+type ThemeColor = { name: string; palette: Record<string, string> }
+
 const { layoutConfig, isDarkTheme } = useLayout()
 const configuratorStore = useConfiguratorStore()
 
@@ -429,7 +432,7 @@ const surfaces = ref([
 ])
 
 function getPresetExt() {
-  const color = primaryColors.value.find((c) => c.name === layoutConfig.primary)
+  const color = primaryColors.value.find((c) => c.name === layoutConfig.primary) ?? primaryColors.value[0] ?? { name: 'noir', palette: {} }
 
   if (color.name === 'noir') {
     return {
@@ -518,7 +521,7 @@ function getPresetExt() {
   }
 }
 
-function updateColors(type, color) {
+function updateColors(type: ThemeType, color: ThemeColor) {
   if (type === 'primary') {
     layoutConfig.primary = color.name
     configuratorStore.setConfiguratorPrimary(color.name)
@@ -530,7 +533,7 @@ function updateColors(type, color) {
   applyTheme(type, color)
 }
 
-function applyTheme(type, color) {
+function applyTheme(type: ThemeType, color: ThemeColor) {
   if (type === 'primary') {
     updatePreset(getPresetExt())
   } else if (type === 'surface') {
@@ -540,14 +543,14 @@ function applyTheme(type, color) {
 
 function onPresetChange() {
   layoutConfig.preset = preset.value
-  const presetValue = presets[preset.value]
+  const presetValue = presets[preset.value as keyof typeof presets]
   const surfacePalette = surfaces.value.find((s) => s.name === layoutConfig.surface)?.palette
   configuratorStore.setConfiguratorPreset(preset.value)
 
   $t()
     .preset(presetValue)
     .preset(getPresetExt())
-    .surfacePalette(surfacePalette)
+    .surfacePalette(surfacePalette ?? {})
     .use({ useDefaultOptions: true })
 }
 
@@ -564,10 +567,13 @@ function setupConfiguratorFromStorage() {
   layoutConfig.surface = configuratorStore.configuratorSurface
   menuMode.value = configuratorStore.configuratorMenumode
   preset.value = configuratorStore.configuratorPreset
-  const primary = primaryColors.value.find((p) => p.name === configuratorStore.configuratorPrimary)
-  const surface = surfaces.value.find((s) => s.name === configuratorStore.configuratorSurface)
-  updateColors('primary', primary)
-  updateColors('surface', surface)
+  // Ensure we never pass undefined to updateColors; fall back to first available option
+  const primary =
+    primaryColors.value.find((p) => p.name === configuratorStore.configuratorPrimary) || primaryColors.value[0]
+  const surface = surfaces.value.find((s) => s.name === configuratorStore.configuratorSurface) || surfaces.value[0]
+  // cast to any to satisfy ThemeColor palette shape at runtime
+  updateColors('primary', primary as any)
+  updateColors('surface', surface as any)
 
   if (configuratorStore.configuratorDarktheme) {
     document.documentElement.classList.add('app-dark')
@@ -577,7 +583,7 @@ function setupConfiguratorFromStorage() {
 
 <template>
   <div
-    class="config-panel hidden absolute top-[3.25rem] right-0 w-64 p-4 bg-surface-0 dark:bg-surface-900 border border-surface rounded-border origin-top shadow-[0px_3px_5px_rgba(0,0,0,0.02),0px_0px_2px_rgba(0,0,0,0.05),0px_1px_4px_rgba(0,0,0,0.08)]"
+    class="config-panel hidden absolute top-13 right-0 w-64 p-4 bg-surface-0 dark:bg-surface-900 border border-surface rounded-border origin-top shadow-[0px_3px_5px_rgba(0,0,0,0.02),0px_0px_2px_rgba(0,0,0,0.05),0px_1px_4px_rgba(0,0,0,0.08)]"
   >
     <div class="flex flex-col gap-4">
       <div>
@@ -588,7 +594,7 @@ function setupConfiguratorFromStorage() {
             :key="primaryColor.name"
             type="button"
             :title="primaryColor.name"
-            @click="updateColors('primary', primaryColor)"
+            @click="updateColors('primary', primaryColor as ThemeColor)"
             :class="[
               'border-none w-5 h-5 rounded-full p-0 cursor-pointer outline-none outline-offset-1',
               { 'outline-primary': layoutConfig.primary === primaryColor.name },
@@ -607,7 +613,7 @@ function setupConfiguratorFromStorage() {
             :key="surface.name"
             type="button"
             :title="surface.name"
-            @click="updateColors('surface', surface)"
+            @click="updateColors('surface', surface as ThemeColor)"
             :class="[
               'border-none w-5 h-5 rounded-full p-0 cursor-pointer outline-none outline-offset-1',
               {
@@ -631,18 +637,6 @@ function setupConfiguratorFromStorage() {
           :allowEmpty="false"
         />
       </div>
-      <!-- DISABLED MENU MODE -->
-      <!--<div class="flex flex-col gap-2">
-        <span class="text-sm text-muted-color font-semibold">Menu Mode</span>
-        <SelectButton
-          v-model="menuMode"
-          @change="onMenuModeChange"
-          :options="menuModeOptions"
-          :allowEmpty="false"
-          optionLabel="label"
-          optionValue="value"
-        />
-      </div>-->
     </div>
   </div>
 </template>

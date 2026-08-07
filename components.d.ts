@@ -11,17 +11,11 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    Avatar: typeof import('primevue/avatar')['default']
     Button: typeof import('primevue/button')['default']
-    Chart: typeof import('primevue/chart')['default']
     Checkbox: typeof import('primevue/checkbox')['default']
     Chip: typeof import('primevue/chip')['default']
-    Column: typeof import('primevue/column')['default']
-    ConfigSidebarComponent: typeof import('./src/components/ConfigSidebarComponent.vue')['default']
-    ContextMenu: typeof import('primevue/contextmenu')['default']
     Dialog: typeof import('primevue/dialog')['default']
     Divider: typeof import('primevue/divider')['default']
-    FileUpload: typeof import('primevue/fileupload')['default']
     FloatingConfigurator: typeof import('./src/components/FloatingConfigurator.vue')['default']
     FloatLabel: typeof import('primevue/floatlabel')['default']
     Form: typeof import('@primevue/forms/form')['default']
@@ -32,10 +26,7 @@ declare module 'vue' {
     Menu: typeof import('primevue/menu')['default']
     Message: typeof import('primevue/message')['default']
     MultiSelect: typeof import('primevue/multiselect')['default']
-    NavSidebarComponent: typeof import('./src/components/NavSidebarComponent.vue')['default']
     Password: typeof import('primevue/password')['default']
-    Popover: typeof import('primevue/popover')['default']
-    ProgressBar: typeof import('primevue/progressbar')['default']
     ProgressSpinner: typeof import('primevue/progressspinner')['default']
     Rating: typeof import('primevue/rating')['default']
     RatingOverview: typeof import('./src/components/RatingOverview.vue')['default']
@@ -44,12 +35,9 @@ declare module 'vue' {
     Select: typeof import('primevue/select')['default']
     Textarea: typeof import('primevue/textarea')['default']
     Toast: typeof import('primevue/toast')['default']
-    TopbarComponent: typeof import('./src/components/TopbarComponent.vue')['default']
     TreeStructure: typeof import('./src/components/TreeStructure.vue')['default']
-    TreeTable: typeof import('primevue/treetable')['default']
   }
   export interface GlobalDirectives {
-    FocusTrap: typeof import('primevue/focustrap')['default']
     Ripple: typeof import('primevue/ripple')['default']
     StyleClass: typeof import('primevue/styleclass')['default']
     Tooltip: typeof import('primevue/tooltip')['default']

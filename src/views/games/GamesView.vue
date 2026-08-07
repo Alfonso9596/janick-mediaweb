@@ -566,7 +566,7 @@ fetchGames()
             <InputText
               v-model="createFormValues.name"
               name="name"
-              class="flex-auto"
+              class="flex-auto w-full"
               autocomplete="off"
             />
             <Message
@@ -583,7 +583,7 @@ fetchGames()
             <InputNumber
               v-model="createFormValues.year"
               name="year"
-              class="flex-auto"
+              class="flex-auto w-full"
               :useGrouping="false"
             />
             <Message
@@ -735,7 +735,7 @@ fetchGames()
             <InputText
               v-model="editFormValues.name"
               name="name"
-              class="flex-auto"
+              class="flex-auto w-full"
               autocomplete="off"
             />
             <Message
@@ -752,7 +752,7 @@ fetchGames()
             <InputNumber
               v-model="editFormValues.year"
               name="year"
-              class="flex-auto"
+              class="flex-auto w-full"
               :useGrouping="false"
             />
             <Message

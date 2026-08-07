@@ -551,7 +551,7 @@ fetchSeries()
             <InputText
               v-model="createFormValues.name"
               name="name"
-              class="flex-auto"
+              class="flex-auto w-full"
               autocomplete="off"
             />
             <Message
@@ -569,7 +569,7 @@ fetchSeries()
             <InputNumber
               v-model="createFormValues.yearStart"
               name="yearStart"
-              class="flex-auto"
+              class="flex-auto w-full"
               :useGrouping="false"
             />
             <Message
@@ -587,7 +587,7 @@ fetchSeries()
             <InputNumber
               v-model="createFormValues.yearEnd"
               name="yearEnd"
-              class="flex-auto"
+              class="flex-auto w-full"
               :useGrouping="false"
             />
             <Message
@@ -737,7 +737,7 @@ fetchSeries()
             <InputText
               v-model="editFormValues.name"
               name="name"
-              class="flex-auto"
+              class="flex-auto w-full"
               autocomplete="off"
             />
             <Message
@@ -755,7 +755,7 @@ fetchSeries()
             <InputNumber
               v-model="editFormValues.yearStart"
               name="yearStart"
-              class="flex-auto"
+              class="flex-auto w-full"
               :useGrouping="false"
             />
             <Message
@@ -773,7 +773,7 @@ fetchSeries()
             <InputNumber
               v-model="editFormValues.yearEnd"
               name="yearEnd"
-              class="flex-auto"
+              class="flex-auto w-full"
               :useGrouping="false"
             />
             <Message

@@ -37,12 +37,12 @@ const props = defineProps({
   },
   parentItemKey: {
     type: String,
-    default: null,
+    default: undefined,
   },
 })
 
 const isActiveMenu = ref(false)
-const itemKey = ref<string | null>(null)
+const itemKey = ref<string | undefined>(undefined)
 
 onBeforeMount(() => {
   itemKey.value = props.parentItemKey
@@ -80,12 +80,12 @@ function itemClick(event: MouseEvent, item: MenuItem) {
     item.command({ originalEvent: event, item: item })
   }
 
-  let foundItemKey
+  let foundItemKey: string | null = null
 
   if (item.items) {
-    foundItemKey = isActiveMenu.value ? props.parentItemKey : itemKey
+    foundItemKey = isActiveMenu.value ? props.parentItemKey ?? null : itemKey.value ?? null
   } else {
-    foundItemKey = itemKey.value
+    foundItemKey = itemKey.value ?? null
   }
 
   setActiveMenuItem(foundItemKey)
