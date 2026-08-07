@@ -9,6 +9,7 @@ import { ArrowLeft } from '@primeicons/vue'
 import type { FileItem, Game } from '@/types/common'
 import router from '@/router'
 
+const apiUrl = import.meta.env.API_URL
 const currentRoute = useRoute()
 const toast = useToast()
 
@@ -100,7 +101,7 @@ onBeforeMount(() => {
       <div class="col-span-1">
         <img
           v-if="state.game.posterFilepath !== undefined"
-          :src="`http://localhost:8080/api/file?filename=${state.game.posterFilepath}`"
+          :src="`${apiUrl}/api/file?filename=${state.game.posterFilepath}`"
           :alt="state.game.name"
           style="box-shadow: 10px 10px 20px #000000; height: 30rem"
         />

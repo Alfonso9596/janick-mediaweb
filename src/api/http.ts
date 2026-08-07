@@ -1,15 +1,17 @@
 import axios from 'axios'
 import type { AxiosInstance } from 'axios'
 
+const apiUrl = import.meta.env.API_URL
+
 const http: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: apiUrl + '/api',
   headers: {
     'Content-Type': 'application/json',
   },
 })
 
 const httpForm: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: apiUrl + '/api',
   headers: {
     'Content-Type': 'multipart/form-data',
   },

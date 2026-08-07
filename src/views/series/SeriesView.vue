@@ -13,6 +13,7 @@ import router from '@/router'
 import type { Series, Genre } from '@/types/common'
 import { getAllMovieGenres } from '@/api/networks/genres.network'
 
+const apiUrl = import.meta.env.API_URL
 const seriesStore = useSeriesStore()
 const authStore = useAuthStore()
 const currentRoute = useRoute()
@@ -515,7 +516,7 @@ fetchSeries()
         <template #body="{ data }">
           <img
             v-if="header.image"
-            :src="`http://localhost:8080/api/file?filename=${data[header.key]}`"
+            :src="`${apiUrl}/api/file?filename=${data[header.key]}`"
             :alt="`${header.title || 'item'}.jpg`"
             style="width: 50px"
           />

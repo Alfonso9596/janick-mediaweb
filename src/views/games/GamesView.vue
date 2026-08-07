@@ -14,6 +14,7 @@ import type { Game, Genre, Platform } from '@/types/common'
 import { getAllGameGenres } from '@/api/networks/genres.network'
 import { getAllGamePlatforms } from '@/api/networks/platforms.network'
 
+const apiUrl = import.meta.env.API_URL
 const gameStore = useGameStore()
 const authStore = useAuthStore()
 const currentRoute = useRoute()
@@ -530,7 +531,7 @@ fetchGames()
         <template #body="{ data }">
           <img
             v-if="header.image"
-            :src="`http://localhost:8080/api/file?filename=${data[header.key]}`"
+            :src="`${apiUrl}/api/file?filename=${data[header.key]}`"
             :alt="`${header.title || 'item'}.jpg`"
             style="width: 50px"
           />
