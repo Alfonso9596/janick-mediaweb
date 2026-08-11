@@ -13,7 +13,7 @@ import type { Movie, Genre } from '@/types/common'
 import { useAuthStore } from '@/stores/auth.store'
 import { getAllMovieGenres } from '@/api/networks/genres.network'
 
-const apiUrl = import.meta.env.API_URL
+const apiUrl = import.meta.env.VITE_API_URL
 const movieStore = useMovieStore()
 const authStore = useAuthStore()
 const currentRoute = useRoute()
