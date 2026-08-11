@@ -168,10 +168,6 @@ function onDarkThemeChange() {
   executeDarkModeToggle()
   configuratorStore.setConfiguratorDarkTheme(isDarkTheme.value)
 }
-
-function test() {
-  console.log(import.meta.env.VITE_API_URL)
-}
 </script>
 
 <template>
@@ -219,7 +215,6 @@ function test() {
         <div class="page-loading-spinner">
           <ProgressSpinner v-if="isPageLoading" />
         </div>
-        <button type="button" class="layout-topbar-action" @click="test">Test</button>
         <button type="button" class="layout-topbar-action" @click="onDarkThemeChange">
           <i :class="['pi', { 'pi-moon': !isDarkTheme, 'pi-sun': isDarkTheme }]"></i>
         </button>
