@@ -90,10 +90,7 @@ onBeforeMount(() => {
         >
           <ArrowLeft />
         </Button>
-        {{ state.movie.name }} ({{ state.movie.year }})<i
-          class="pi pi-heart ml-4"
-          style="color: #ea0c74"
-        ></i>
+        {{ state.movie.name }} ({{ state.movie.year }})
       </div>
       <div class="col-span-4">
         <RatingOverview @update:modelValue="setRating" :item="state.movie" />

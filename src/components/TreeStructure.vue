@@ -153,8 +153,19 @@ const handleFileUpload = async () => {
 
 const handleFileChange = (event: Event) => {
   const target = event.target as HTMLInputElement
+  const fileSize = target.files?.[0].size ?? 0
+
+  if (fileSize > 5368709120) {
+    toast.add({
+      severity: 'error',
+      summary: 'Die Datei darf nicht grösser als 5GB sein.',
+      life: 5000
+    })
+    return
+  }
+
   state.mediaFile = target.files?.[0] ?? null
-  state.uploadFileSize = target.files?.[0].size ?? 0
+  state.uploadFileSize = fileSize
 }
 
 function handleFileSelectClick(event: Event) {

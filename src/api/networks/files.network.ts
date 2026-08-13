@@ -31,29 +31,24 @@ const uploadNewPoster = async (file: File, mediaType: string, title: string, art
 }
 
 const uploadFile = async (file: File, mediaType: string, mediaId: number, config?: AxiosRequestConfig) => {
-  try {
-    let path = FILES_ENDPOINTS.uploadFile
-    if (getParamsFromPath(path)?.length) {
-      path = getPathWithParams(path, {
-        mediaType
-      })
-    }
-    const formData = new FormData()
-
-    formData.append('mediaId', String(mediaId))
-    formData.append('file', file)
-
-    let response = null
-    if (config) {
-      response = await httpForm.post(path, formData, config)
-    } else {
-      response = await httpForm.post(path, formData)
-    }
-    return response
-  } catch (e) {
-    console.error(e)
-    return false
+  let path = FILES_ENDPOINTS.uploadFile
+  if (getParamsFromPath(path)?.length) {
+    path = getPathWithParams(path, {
+      mediaType
+    })
   }
+  const formData = new FormData()
+
+  formData.append('mediaId', String(mediaId))
+  formData.append('file', file)
+
+  let response = null
+  if (config) {
+    response = await httpForm.post(path, formData, config)
+  } else {
+    response = await httpForm.post(path, formData)
+  }
+  return response
 }
 
 export { uploadNewPoster, uploadFile, FILES_ENDPOINTS }

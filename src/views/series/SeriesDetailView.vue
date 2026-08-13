@@ -91,10 +91,7 @@ onBeforeMount(() => {
         >
           <ArrowLeft />
         </Button>
-        {{ state.series.name }} ({{ state.series.yearStart }} - {{ state.series.yearEnd }})<i
-          class="pi pi-heart ml-4"
-          style="color: #ea0c74"
-        ></i>
+        {{ state.series.name }} ({{ state.series.yearStart }} - {{ state.series.yearEnd }})
       </div>
       <div class="col-span-4">
         <RatingOverview @update:modelValue="setRating" :item="state.series" />
