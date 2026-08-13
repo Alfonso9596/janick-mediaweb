@@ -110,7 +110,6 @@ const onCreateGameGenreFormSubmit = async (e: { valid: boolean }) => {
     const createGameGenreResponse = await createGameGenre(createGameGenreFormValues)
 
     if (!createGameGenreResponse) {
-      console.log('Failed genre creation')
       toast.add({
         severity: 'error',
         summary: 'Genre "' + createGameGenreFormValues.name + '" existiert bereits',
@@ -132,7 +131,6 @@ const onEditGameGenreFormSubmit = async () => {
   const editGameGenreResponse = await editGameGenre(state.editDialogGenreId, editGameGenreFormValues)
 
   if (editGameGenreResponse === false) {
-    console.log('Failed game genre edit')
     toast.add({
       severity: 'error',
       summary: 'Fehler beim Bearbeiten des Genres "' + editGameGenreFormValues.name + '"',
@@ -153,7 +151,6 @@ const onDeleteGameGenreFormSubmit = async () => {
   const deleteGameGenreResponse = await deleteGameGenre(state.deleteDialogGenreId)
 
   if (deleteGameGenreResponse === false) {
-    console.log('Failed game genre deletion')
     toast.add({
       severity: 'error',
       summary: 'Fehler beim Löschen des Genres "' + state.deleteDialogGenreName + '"',

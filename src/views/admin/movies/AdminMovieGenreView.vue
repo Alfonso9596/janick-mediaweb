@@ -110,7 +110,6 @@ const onCreateMovieGenreFormSubmit = async (e: { valid: boolean }) => {
     const createMovieGenreResponse = await createMovieGenre(createMovieGenreFormValues)
 
     if (!createMovieGenreResponse) {
-      console.log('Failed genre creation')
       toast.add({
         severity: 'error',
         summary: 'Genre "' + createMovieGenreFormValues.name + '" existiert bereits',
@@ -132,7 +131,6 @@ const onEditMovieGenreFormSubmit = async () => {
   const editMovieGenreResponse = await editMovieGenre(state.editDialogGenreId, editMovieGenreFormValues)
 
   if (editMovieGenreResponse === false) {
-    console.log('Failed movie genre edit')
     toast.add({
       severity: 'error',
       summary: 'Fehler beim Bearbeiten des Genres "' + editMovieGenreFormValues.name + '"',
@@ -153,7 +151,6 @@ const onDeleteMovieGenreFormSubmit = async () => {
   const deleteMovieGenreResponse = await deleteMovieGenre(state.deleteDialogGenreId)
 
   if (deleteMovieGenreResponse === false) {
-    console.log('Failed movie genre deletion')
     toast.add({
       severity: 'error',
       summary: 'Fehler beim Löschen des Genres "' + state.deleteDialogGenreName + '"',

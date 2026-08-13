@@ -18,7 +18,7 @@ const emitRating = (event: { value: number | null }) => {
 
 <template>
   <div class="rating-overview mb-4" style="display: flex">
-    <Rating @change="emitRating" :model-value="props.item.ratingValue" allowHalf>
+    <Rating @change="emitRating" :model-value="props.item.ratingValue">
       <template #onicon>
         <StarFill color="yellow" />
       </template>

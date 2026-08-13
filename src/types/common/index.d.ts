@@ -1,3 +1,5 @@
+type MediaType = 'MOVIE' | 'SERIES' | 'GAME' | 'MUSIC'
+
 type User = {
   id: number
   username: string
@@ -70,6 +72,19 @@ type Game = {
   user?: User
 }
 
+type Music = {
+  id: number
+  name: string
+  artist: string
+  year: number
+  posterFilepath?: string
+  description?: string
+  genres?: string[]
+  ratingAmount: number
+  ratingValue: number
+  user?: User
+}
+
 type MovieInput = {
   name: string
   year: number
@@ -95,6 +110,13 @@ type GameInput = {
   platforms?: string[]
 }
 
+type MusicInput = {
+  name: string
+  year: number
+  description?: string
+  genres?: string[]
+}
+
 type Genre = {
   id: number
   name: string
@@ -113,4 +135,4 @@ type PlatformInput = {
   name: string
 }
 
-export { User, UserInput, Role, RoleInput, FileItem, Movie, Series, Game, MovieInput, SeriesInput, GameInput, Genre, Platform, GenreInput, PlatformInput }
+export { MediaType, User, UserInput, Role, RoleInput, FileItem, Movie, Series, Game, Music, MovieInput, SeriesInput, GameInput, MusicInput, Genre, Platform, GenreInput, PlatformInput }

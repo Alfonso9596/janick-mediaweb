@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed, reactive, watch, type PropType } from 'vue'
-import { TreeTable, Column, FileUpload, type FileUploadSelectEvent, useToast } from 'primevue'
+import { computed, reactive, ref, watch, type PropType } from 'vue'
+import { TreeTable, Column, ProgressBar, useToast } from 'primevue'
+import { CloudUpload, Plus, Times } from '@primeicons/vue'
 import type { TreeNode } from 'primevue/treenode'
-import type { FileItem } from '@/types/common'
+import type { FileItem, MediaType} from '@/types/common'
 import { uploadFile } from '@/api/networks/files.network'
+import { formatSize, formatSpeed } from '@/helpers/format.helper.ts'
+import { type AxiosProgressEvent } from 'axios'
 
 const emit = defineEmits(['fileUpload'])
 
@@ -23,7 +26,7 @@ const props = defineProps({
     default: ''
   },
   mediaType: {
-    type: String as PropType<'MOVIE' | 'SERIES' | 'GAME'>,
+    type: String as PropType<MediaType>,
     default: ''
   },
   mediaId: {
@@ -35,10 +38,22 @@ const props = defineProps({
 const state = reactive<{
   uploadFileDialogVisible: boolean
   mediaFile: File | null
+  uploading: boolean,
+  uploadProgress: number
+  uploadSpeed: number
+  uploadTimeLeft: number
+  uploadFileSize: number
 }>({
   uploadFileDialogVisible: false,
-  mediaFile: null
+  mediaFile: null,
+  uploading: false,
+  uploadProgress: 0,
+  uploadSpeed: 0,
+  uploadTimeLeft: 0,
+  uploadFileSize: 0
 })
+
+const inputRef = ref()
 
 watch(
   () => props.files,
@@ -81,55 +96,73 @@ function formatFileSize(file: FileItem): string {
     return '-'
   }
   const size = typeof file.size === 'number' ? file.size : Number.parseInt(file.size, 10)
-  if (size < 1024) {
-    return size + ' B'
-  } else if (size < 1024 * 1024) {
-    return (size / 1024).toFixed(2) + ' KB'
-  } else if (size < 1024 * 1024 * 1024) {
-    return (size / (1024 * 1024)).toFixed(2) + ' MB'
-  } else {
-    return (size / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
-  }
+  return formatSize(size)
 }
 
-const onUploadFileSubmit = async () => {
-  if (state.mediaFile !== null) {
-    console.log('Media ID: ' + props.mediaId)
-    console.log('Media Type: ' + props.mediaType)
-    const fileResponse = await uploadFile(
+const handleFileUpload = async () => {
+  state.uploading = true
+  const startTime = Date.now()
+
+  if (!state.mediaFile) {
+    return
+  }
+
+  try {
+    await uploadFile(
       state.mediaFile,
       props.mediaType,
-      props.mediaId
+      props.mediaId,
+      {
+        onUploadProgress: (progressEvent: AxiosProgressEvent) => {
+          const total = progressEvent.total ?? 0
+          state.uploadProgress = total > 0 ? Math.round((progressEvent.loaded / total) * 100) : 0
+
+          const currentTime = Date.now()
+          const elapsedTime = (currentTime - startTime) / 1000
+          const speed = progressEvent.loaded / elapsedTime
+          const remainingBytes = total - progressEvent.loaded
+          const estimatedTimeLeft = remainingBytes / speed
+
+          state.uploadSpeed = speed
+          state.uploadTimeLeft = Math.round(estimatedTimeLeft)
+        }
+      }
     )
 
-    if (!fileResponse) {
-      console.error('Failed file upload')
-      toast.add({
-        severity: 'error',
-        summary: 'Die Datei konnte nicht hochgeladen werden',
-        life: 5000
-      })
-      return
-    }
     toast.add({
       severity: 'success',
       summary: 'Die Datei wurde erfolgreich hochgeladen',
       life: 3000
     })
-    state.uploadFileDialogVisible = false
+  } catch {
+    toast.add({
+      severity: 'error',
+      summary: 'Die Datei konnte nicht hochgeladen werden',
+      life: 5000
+    })
+  } finally {
+    state.uploading = false
+    state.mediaFile = null
+    state.uploadProgress = 0
+    state.uploadSpeed = 0
+    state.uploadTimeLeft = 0
+    state.uploadFileSize = 0
     emit('fileUpload')
   }
 }
 
-const clearUploadFileDialog = () => {
-  state.mediaFile = null
+const handleFileChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  state.mediaFile = target.files?.[0] ?? null
+  state.uploadFileSize = target.files?.[0].size ?? 0
 }
 
-function onFileSelect(event: FileUploadSelectEvent) {
-  state.mediaFile = event.files[0]
+function handleFileSelectClick(event: Event) {
+  event.preventDefault()
+  inputRef.value.click()
 }
 
-function onFileRemove() {
+function handleCancelFileUpload() {
   state.mediaFile = null
 }
 </script>
@@ -138,8 +171,40 @@ function onFileRemove() {
 	<div class="col-span-4 mt-5">
     <TreeTable :value="treeConfig" :loading="props.loading">
       <template #header>
-        <div class="flex justify-end">
-          <Button @click="state.uploadFileDialogVisible = true" type="button" label="Neu" icon="pi pi-plus" />
+        <div class="w-max">
+          <div class="file-upload-header flex gap-2">
+            <input ref="inputRef" hidden type="file" @change="handleFileChange" />
+            <Button v-if="state.mediaFile === null" class="mb-2" type="button" @click="handleFileSelectClick"><Plus/>Neu</Button>
+            <Button v-if="state.mediaFile !== null" type="button" @click="handleFileUpload" severity="success"><CloudUpload />Hochladen</Button>
+            <Button v-if="state.mediaFile !== null" type="button" @click="handleCancelFileUpload" severity="danger"><Times />Abbrechen</Button>
+          </div>
+          <div v-if="state.mediaFile !== null" class="file-upload-content mt-2 h-full grid nested-grid">
+            <div class="col-8">
+              <div class="grid">
+                <div class="col-12 pb-0">
+                  <div class="text-left pt-2 pl-2">{{ state.mediaFile.name }}</div>
+                </div>
+                <div class="col-12 pt-0 pb-0">
+                  <div class="text-left text-sm text-300 pb-2 pl-2"><span>Dateigrösse: {{ formatSize(state.mediaFile.size) }}</span></div>
+                </div>
+                <div class="col-12 pt-0">
+                  <div class="text-left pl-2">
+                    <ProgressBar :value="state.uploadProgress" :showValue="false" :pt="{ root: 'h-1.5! rounded-full!', value: '--p-primary-color! rounded-full!' }"/>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="grid pl-2 pr-2">
+                    <div class="col-6">
+                      <div class="text-left text-sm text-300"><span><b>Übrige Zeit: </b>{{ state.uploadTimeLeft }} Sekunden</span></div>
+                    </div>
+                    <div class="col-6">
+                      <div class="text-right text-sm text-300"><span><b>Uploadrate: </b>{{ formatSpeed(state.uploadSpeed) }}</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </template>
       <template #empty> Keine Dateien gefunden. </template>
@@ -166,62 +231,5 @@ function onFileRemove() {
         </template>
       </Column>
     </TreeTable>
-
-    <!-- UPLOAD FILE DIALOG -->
-    <Dialog
-      @afterHide="clearUploadFileDialog"
-      v-model:visible="state.uploadFileDialogVisible"
-      modal
-      :header="props.fileUploadTitle"
-      :style="{ width: '32rem' }"
-    >
-      <Form
-        @submit="onUploadFileSubmit"
-        class="formgrid grid"
-      >
-        <div class="field col-12">
-          <FileUpload
-            @select="onFileSelect"
-            @clear="onFileRemove"
-            customUpload
-            :fileLimit="1"
-          >
-            <template #header="{ chooseCallback, clearCallback, files }">
-              <div class="flex flex-wrap justify-between items-center flex-1 gap-4">
-                <div class="flex gap-2">
-                  <Button
-                    @click="chooseCallback()"
-                    icon="pi pi-cloud-upload"
-                    rounded
-                    variant="outlined"
-                    severity="success"
-                    :disabled="files.length > 0"
-                  />
-                  <Button
-                    @click="clearCallback()"
-                    icon="pi pi-times"
-                    rounded
-                    variant="outlined"
-                    severity="danger"
-                    :disabled="!files || files.length === 0"
-                  />
-                </div>
-              </div>
-            </template>
-            <template #empty>
-              <div class="flex items-center justify-center flex-col">
-                <i
-                  class="pi pi-cloud-upload border-2! rounded-full! p-4! text-4xl! text-muted-color!"
-                />
-                <p class="mt-6 mb-0">Datei hierhin verschieben</p>
-              </div>
-            </template>
-          </FileUpload>
-        </div>
-        <div class="field col-6">
-          <Button type="submit" severity="success" label="Bestätigen" />
-        </div>
-      </Form>
-    </Dialog>
   </div>
 </template>

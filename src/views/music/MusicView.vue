@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { getPageableSeries, createNewSeries, editSeries, deleteSeries } from '@/api/networks/series.network'
+import { getPageableMusic, createNewMusic, editMusic, deleteMusic } from '@/api/networks/music.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
-import { useSeriesStore } from '@/stores/series.store'
+import { useMusicStore } from '@/stores/music.store'
 import { Column, ContextMenu, DataTable, FileUpload, type DataTableRowClickEvent, type DataTableRowContextMenuEvent, type FileUploadSelectEvent } from 'primevue'
 import { useRoute } from 'vue-router'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
@@ -10,18 +10,18 @@ import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import { useAuthStore } from '@/stores/auth.store'
 import router from '@/router'
-import type { Series, Genre } from '@/types/common'
-import { getAllMovieGenres } from '@/api/networks/genres.network'
+import type { Music, Genre } from '@/types/common'
+import { getAllMusicGenres } from '@/api/networks/genres.network'
 
 const apiUrl = import.meta.env.VITE_API_URL
-const seriesStore = useSeriesStore()
+const musicStore = useMusicStore()
 const authStore = useAuthStore()
 const currentRoute = useRoute()
 const toast = useToast()
 const cm = ref()
 
 const state = reactive<{
-  seriesList: Series[]
+  musicList: Music[]
   page: number
   pageSize: number
   sortBy: string
@@ -35,17 +35,17 @@ const state = reactive<{
   genreListLoading: boolean
   genreList: Genre[]
   editDialogVisible: boolean
-  editDialogSeriesId: number
+  editDialogMusicId: number
   deleteDialogVisible: boolean
-  deleteDialogSeriesName: string
-  deleteDialogSeriesId: number
-  selectedContextSeries: Series | null
+  deleteDialogMusicName: string
+  deleteDialogMusicId: number
+  selectedContextMusic: Music | null
 }>({
-  seriesList: [],
-  page: seriesStore.seriesPage,
-  pageSize: seriesStore.seriesPageSize,
-  sortBy: seriesStore.seriesSortBy,
-  sortDir: seriesStore.seriesSortDir,
+  musicList: [],
+  page: musicStore.musicPage,
+  pageSize: musicStore.musicPageSize,
+  sortBy: musicStore.musicSortBy,
+  sortDir: musicStore.musicSortDir,
   totalRecords: 0,
   totalPages: undefined,
   loading: false,
@@ -55,113 +55,107 @@ const state = reactive<{
   genreListLoading: false,
   genreList: [],
   editDialogVisible: false,
-  editDialogSeriesId: 0,
+  editDialogMusicId: 0,
   deleteDialogVisible: false,
-  deleteDialogSeriesName: '',
-  deleteDialogSeriesId: 0,
-  selectedContextSeries: null
+  deleteDialogMusicName: '',
+  deleteDialogMusicId: 0,
+  selectedContextMusic: null
 })
 
 const defaultFormValues = reactive<{
   name: string
+  artist: string
   description: string
-  yearStart: number
-  yearEnd: number
-  episodeLength: number
+  year: number
   genres: string[]
 }>({
   name: '',
+  artist: '',
   description: '',
-  yearStart: 0,
-  yearEnd: 0,
-  episodeLength: 0,
-  genres: [],
+  year: 0,
+  genres: []
 })
 
 const createFormValues = reactive<{
   name: string
+  artist: string
   description: string
-  yearStart: number
-  yearEnd: number
-  episodeLength: number
+  year: number
   genres: string[]
   posterFile: File | null
 }>({
   name: '',
+  artist: '',
   description: '',
-  yearStart: 0,
-  yearEnd: 0,
-  episodeLength: 0,
+  year: 0,
   genres: [],
-  posterFile: null,
+  posterFile: null
 })
 
 const editFormValues = reactive<{
   name: string
+  artist: string
   description: string
-  yearStart: number
-  yearEnd: number
-  episodeLength: number
+  year: number
   genres: string[]
 }>({
   name: '',
+  artist: '',
   description: '',
-  yearStart: 0,
-  yearEnd: 0,
-  episodeLength: 0,
+  year: 0,
   genres: []
 })
 
 watch(
   () => state.pageSize,
   () => {
-    fetchSeries()
-    seriesStore.setSeriesPageSize(state.pageSize)
+    fetchMusic()
+    musicStore.setMusicPageSize(state.pageSize)
   },
 )
 
 watch(
   () => state.page,
   () => {
-    fetchSeries()
-    seriesStore.setSeriesPage(state.page)
+    fetchMusic()
+    musicStore.setMusicPage(state.page)
   },
 )
 
 watch(
   () => state.sortBy,
   () => {
-    fetchSeries()
-    seriesStore.setSeriesSortBy(state.sortBy)
+    fetchMusic()
+    musicStore.setMusicSortBy(state.sortBy)
   },
 )
 
 watch(
   () => state.sortDir,
   () => {
-    fetchSeries()
-    seriesStore.setSeriesSortDir(state.sortDir)
+    fetchMusic()
+    musicStore.setMusicSortDir(state.sortDir)
   },
 )
 
 watch(
   () => currentRoute.query,
   () => {
-    fetchSeries()
+    fetchMusic()
   },
 )
 
 watch(
   () => state.searchName,
   () => {
-    fetchSeries()
+    fetchMusic()
   },
 )
 
 watch(
   () => state.searchGenre,
   () => {
-    fetchSeries()
+    fetchMusic()
   },
 )
 
@@ -177,17 +171,18 @@ const headers = computed(() => [
     sortable: true,
   },
   {
+    key: 'artist',
+    title: 'Künstler',
+    sortable: true
+  },
+  {
     key: 'description',
     title: 'Beschreibung',
   },
   {
-    key: 'yearStart',
+    key: 'year',
     title: 'Erscheinungsjahr',
     sortable: true,
-  },
-  {
-    key: 'episodeLength',
-    title: 'Episodenlänge (Minuten)',
   },
   {
     key: 'ratingValue',
@@ -201,12 +196,12 @@ const contextMenuModel = ref([
     label: 'Bearbeiten',
     icon: 'pi pi-pencil',
     disabled: () => {
-      return (authStore.decodedToken?.sub !== state.selectedContextSeries?.user?.username) &&
+      return (authStore.decodedToken?.sub !== state.selectedContextMusic?.user?.username) &&
         (!authStore.roles?.includes('ADMIN'))
     },
     command: () => {
-      if (state.selectedContextSeries == null) return
-      showEditDialog(state.selectedContextSeries)
+      if (state.selectedContextMusic == null) return
+      showEditDialog(state.selectedContextMusic)
     }
   },
   {
@@ -215,28 +210,27 @@ const contextMenuModel = ref([
   {
     label: 'Löschen',
     icon: 'pi pi-trash',
-    color: '#c73c3c',
     disabled: () => {
-      return (authStore.decodedToken?.sub !== state.selectedContextSeries?.user?.username) &&
+      return (authStore.decodedToken?.sub !== state.selectedContextMusic?.user?.username) &&
         (!authStore.roles?.includes('ADMIN'))
     },
     command: () => {
-      if (state.selectedContextSeries == null) return
-      showDeleteDialog(state.selectedContextSeries)
+      if (state.selectedContextMusic == null) return
+      showDeleteDialog(state.selectedContextMusic)
     }
   }
 ])
 
 const onRowContextMenu = (event: DataTableRowContextMenuEvent) => {
-  state.selectedContextSeries = event.data
+  state.selectedContextMusic = event.data
   cm.value.show(event.originalEvent)
 }
 
 const onRowClick = (event: DataTableRowClickEvent) => {
-  goToSeriesPage(event.data.id)
+  goToMusicPage(event.data.id)
 }
 
-const fetchSeries = async () => {
+const fetchMusic = async () => {
   state.loading = true
 
   const params = {
@@ -246,11 +240,12 @@ const fetchSeries = async () => {
     sortDir: state.sortDir,
     ...currentRoute.query,
     name: state.searchName ? state.searchName : '',
-    genre: state.searchGenre ? state.searchGenre : '',
+    artist: state.searchName ? state.searchName : '',
+    genre: state.searchGenre ? state.searchGenre : ''
   }
 
-  const response = await getPageableSeries(params)
-  state.seriesList = response.content
+  const response = await getPageableMusic(params)
+  state.musicList = response.content
   state.totalRecords = response.totalElements
   state.totalPages = response.totalPages
 
@@ -259,7 +254,7 @@ const fetchSeries = async () => {
 
 const fetchGenreList = async () => {
   state.genreListLoading = true
-  const response = await getAllMovieGenres()
+  const response = await getAllMusicGenres()
   state.genreList = response
   state.genreListLoading = false
 }
@@ -268,27 +263,24 @@ const capDescription = (value: string) => {
   return value ? value.substring(0, 100) + '...' : ''
 }
 
-const goToSeriesPage = (id: number) => {
-  router.push('/series/' + id)
+const goToMusicPage = (id: number) => {
+  router.push('/music/' + id)
 }
 
 const resolver = ref(
   zodResolver(
     z.object({
-      name: z.string().min(1, { message: 'Der name wird benötigt.' }),
-      yearStart: z.union([
+      name: z.string().min(1, 'Name ist erforderlich'),
+      artist: z.string().min(1, 'Künstler ist erforderlich'),
+      year: z.union([
         z
           .number()
-          .gt(1887, {
-            message: "Der älteste Film ist der Kurzfilm 'Roundhay Garden Scene' aus dem Jahr 1888.",
+          .gt(1, {
+            message: 'Das Jahr ist erforderlich und muss größer als 1 sein',
           })
           .lt(new Date().getFullYear() + 1, {
-            message: 'Seroem aus der Zukunft werden nicht akzeptiert.',
+            message: 'Das Jahr darf nicht in der Zukunft liegen',
           }),
-        z.literal(null),
-      ]),
-      length: z.union([
-        z.number().gt(0, { message: 'Muss länger als 0 Minuten sein.' }),
         z.literal(null),
       ]),
     }),
@@ -300,37 +292,30 @@ const onCreateFormSubmit = async (e: { valid: boolean }) => {
     if (createFormValues.posterFile !== null) {
       const posterResponse = await uploadNewPoster(
         createFormValues.posterFile,
-        'SERIES',
+        'MUSIC',
         createFormValues.name,
-        '',
-        String(createFormValues.yearStart),
+        createFormValues.artist,
+        String(createFormValues.year),
       )
 
       if (!posterResponse) {
         console.error('Failed image upload')
         toast.add({
           severity: 'error',
-          summary: 'Ein Poster für "' + createFormValues.name + '" existiert bereits',
+          summary: 'Ein Poster für "' + createFormValues.name + '" konnte nicht hochgeladen werden.',
           life: 5000,
         })
         return
       }
     }
 
-    const seriesResponse = await createNewSeries(createFormValues)
+    const musicResponse = await createNewMusic(createFormValues)
 
-    if (!seriesResponse) {
+    if (!musicResponse) {
       if (createFormValues.posterFile) {
         toast.add({
           severity: 'error',
-          summary: 'Das Bild wurde hochgeladen, aber die Serie wurde nicht gespeichert',
-          life: 5000,
-        })
-        return
-      } else {
-        toast.add({
-          severity: 'error',
-          summary: 'Die Serie "' + createFormValues.name + '" existiert bereits',
+          summary: 'Das Musikstück "' + createFormValues.name + '" konnte nicht erstellt werden, obwohl das Poster erfolgreich hochgeladen wurde.',
           life: 5000,
         })
         return
@@ -338,74 +323,71 @@ const onCreateFormSubmit = async (e: { valid: boolean }) => {
     }
     toast.add({
       severity: 'success',
-      summary: 'Die Serie "' + createFormValues.name + '" wurde gespeichert',
+      summary: 'Das Musikstück "' + createFormValues.name + '" wurde erfolgreich erstellt.',
       life: 3000,
     })
     state.createDialogVisible = false
-    fetchSeries()
+    fetchMusic()
     fetchGenreList()
   }
 }
 
 const onEditFormSubmit = async () => {
-  const editSeriesResponse = await editSeries(state.editDialogSeriesId, editFormValues)
+  const editMusicResponse = await editMusic(state.editDialogMusicId, editFormValues)
 
-  if (editSeriesResponse === false) {
+  if (editMusicResponse === false) {
     toast.add({
       severity: 'error',
-      summary: 'Fehler beim Bearbeiten der Serie "' + editFormValues.name + '"',
-      life: 5000
+      summary: 'Das Musikstück "' + editFormValues.name + '" konnte nicht bearbeitet werden.',
+      life: 5000,
     })
   } else {
     toast.add({
       severity: 'success',
-      summary: 'Serie "' + editFormValues.name + '" erfolgreich bearbeitet',
-      life: 3000
+      summary: 'Das Musikstück "' + editFormValues.name + '" wurde erfolgreich bearbeitet.',
+      life: 3000,
     })
+    state.editDialogVisible = false
+    fetchMusic()
   }
-
-  state.editDialogVisible = false
-  fetchSeries()
 }
 
 const onDeleteFormSubmit = async () => {
-  const deleteSeriesResponse = await deleteSeries(state.deleteDialogSeriesId)
+  const deleteMusicResponse = await deleteMusic(state.deleteDialogMusicId)
 
-  if (deleteSeriesResponse === false) {
+  if (deleteMusicResponse === false) {
     toast.add({
       severity: 'error',
-      summary: 'Fehler beim Löschen der Serie "' + state.deleteDialogSeriesName + '"',
-      life: 5000
+      summary: 'Das Musikstück "' + state.deleteDialogMusicName + '" konnte nicht gelöscht werden.',
+      life: 5000,
     })
   } else {
     toast.add({
       severity: 'success',
-      summary: 'Serie "' + state.deleteDialogSeriesName + '" erfolgreich gelöscht',
-      life: 3000
+      summary: 'Das Musikstück "' + state.deleteDialogMusicName + '" wurde erfolgreich gelöscht.',
+      life: 3000,
     })
+    state.deleteDialogVisible = false
+    fetchMusic()
   }
-  state.deleteDialogVisible = false
-  fetchSeries()
 }
 
 const clearCreateDialogForm = () => {
   createFormValues.name = defaultFormValues.name
+  createFormValues.artist = defaultFormValues.artist
   createFormValues.description = defaultFormValues.description
-  createFormValues.yearStart = defaultFormValues.yearStart
-  createFormValues.yearEnd = defaultFormValues.yearEnd
-  createFormValues.episodeLength = defaultFormValues.episodeLength
+  createFormValues.year = defaultFormValues.year
   createFormValues.genres = defaultFormValues.genres
   createFormValues.posterFile = null
 }
 
-const showEditDialog = (series: Series) => {
-  state.editDialogSeriesId = Number.parseInt(String(series.id), 10)
-  editFormValues.name = series.name
-  editFormValues.description = series.description ?? ''
-  editFormValues.yearStart = series.yearStart
-  editFormValues.yearEnd = series.yearEnd ?? new Date().getFullYear()
-  editFormValues.episodeLength = series.episodeLength ?? 0
-  editFormValues.genres = series.genres ?? []
+const showEditDialog = (music: Music) => {
+  state.editDialogMusicId = Number.parseInt(String(music.id), 10)
+  editFormValues.name = music.name
+  editFormValues.artist = music.artist
+  editFormValues.description = music.description ?? ''
+  editFormValues.year = music.year
+  editFormValues.genres = music.genres ?? []
   state.editDialogVisible = true
 }
 
@@ -413,16 +395,15 @@ const clearEditDialogForm = () => {
   state.editDialogVisible = false
 
   editFormValues.name = ''
+  editFormValues.artist = ''
   editFormValues.description = ''
-  editFormValues.yearStart = 0
-  editFormValues.yearEnd = 0
-  editFormValues.episodeLength = 0
+  editFormValues.year = 0
   editFormValues.genres = []
 }
 
-const showDeleteDialog = async (series: Series) => {
-  state.deleteDialogSeriesName = series.name
-  state.deleteDialogSeriesId = series.id
+const showDeleteDialog = async (music: Music) => {
+  state.deleteDialogMusicId = music.id
+  state.deleteDialogMusicName = music.name
   state.deleteDialogVisible = true
 }
 
@@ -435,13 +416,13 @@ function onPosterRemove() {
 }
 
 fetchGenreList()
-fetchSeries()
+fetchMusic()
 </script>
 
 <template>
   <div class="card">
-    <div class="font-semibold text-xl mb-4">Serien</div>
-    <ContextMenu ref="cm" :model="contextMenuModel" @hide="state.selectedContextSeries = null">
+    <div class="font-semibold text-xl mb-4">Musik</div>
+    <ContextMenu ref="cm" :model="contextMenuModel" @hide="state.selectedContextMusic = null">
       <template #item="{ item, props }">
         <a class="flex items-center" v-bind="props.action" :style="{ 'background-color': item.color, 'border-radius': '2px' }">
           <span :class="item.icon" />
@@ -451,7 +432,7 @@ fetchSeries()
     </ContextMenu>
     <DataTable
       lazy
-      :value="state.seriesList"
+      :value="state.musicList"
       :paginator="true"
       :rows="state.pageSize"
       :rowsPerPageOptions="[10, 20, 50]"
@@ -465,7 +446,7 @@ fetchSeries()
       :sortOrder="state.sortDir === 'asc' ? 1 : -1"
       contextMenu
       selectionMode="single"
-      :contextMenuSelection="state.selectedContextSeries"
+      :contextMenuSelection="state.selectedContextMusic"
       @rowContextmenu="onRowContextMenu"
       @rowClick="onRowClick"
       @page="state.page = $event.page"
@@ -475,12 +456,7 @@ fetchSeries()
     >
       <template #header>
         <div class="flex justify-end">
-          <Button
-            @click="state.createDialogVisible = true"
-            type="button"
-            label="Neu"
-            icon="pi pi-plus"
-          />
+          <Button @click="state.createDialogVisible = true" type="button" label="Neu" icon="pi pi-plus" />
           <Select
             v-model="state.searchGenre"
             :options="state.genreList"
@@ -497,7 +473,10 @@ fetchSeries()
             <InputIcon>
               <i class="pi pi-search" />
             </InputIcon>
-            <InputText v-model="state.searchName" placeholder="Suche..." />
+            <InputText
+              v-model="state.searchName"
+              placeholder="Suche..."
+            />
             <InputIcon class="pi pi-times" style="cursor: pointer" @click="state.searchName = ''" />
           </IconField>
         </div>
@@ -517,9 +496,9 @@ fetchSeries()
             :alt="`${header.title || 'item'}.jpg`"
             style="width: 50px"
           />
-          <span v-else-if="data[header.key].length > 100" v-tooltip.top="data[header.key]">{{
-            capDescription(data[header.key])
-          }}</span>
+          <span v-else-if="data[header.key].length > 100" v-tooltip.top="data[header.key]">
+            {{ capDescription(data[header.key]) }}
+          </span>
           <span v-else-if="header.rating">
             <b>{{ data[header.key] }}</b>
             <i class="pi pi-star-fill ml-2" style="color: #dfbf13" />
@@ -529,12 +508,12 @@ fetchSeries()
       </Column>
     </DataTable>
 
-    <!-- CREATE SERIES FORM DIALOG -->
+    <!-- CREATE MUSIC FORM DIALOG -->
     <Dialog
       @afterHide="clearCreateDialogForm"
       v-model:visible="state.createDialogVisible"
       modal
-      header="Neue Serie einfügen"
+      header="Neue Musik einfügen"
       :style="{ width: '32rem' }"
     >
       <Form
@@ -557,75 +536,43 @@ fetchSeries()
               severity="error"
               size="small"
               variant="simple"
-              >{{ $createForm.name.error?.message }}</Message
-            >
-            <label for="name">Name</label>
+              >{{ $createForm.name.error?.message }}</Message>
+              <label for="name">Name</label>
           </FloatLabel>
         </div>
         <div class="field col-12 md:col-6">
           <FloatLabel variant="in">
             <InputNumber
-              v-model="createFormValues.yearStart"
-              name="yearStart"
+              v-model="createFormValues.year"
+              name="year"
               class="flex-auto w-full"
               :useGrouping="false"
             />
             <Message
-              v-if="$createForm.yearStart?.invalid"
+              v-if="$createForm.year?.invalid"
               severity="error"
               size="small"
               variant="simple"
-              >{{ $createForm.yearStart.error?.message }}</Message
+              >{{ $createForm.year.error?.message }}</Message
             >
-            <label for="yearStart">Erscheinungsjahr</label>
+            <label for="year">Erscheinungsjahr</label>
           </FloatLabel>
         </div>
         <div class="field col-12 md:col-6">
           <FloatLabel variant="in">
-            <InputNumber
-              v-model="createFormValues.yearEnd"
-              name="yearEnd"
+            <InputText
+              v-model="createFormValues.artist"
+              name="artist"
               class="flex-auto w-full"
-              :useGrouping="false"
+              autocomplete="off"
             />
             <Message
-              v-if="$createForm.yearEnd?.invalid"
+              v-if="$createForm.artist?.invalid"
               severity="error"
               size="small"
               variant="simple"
-              >{{ $createForm.yearEnd.error?.message }}</Message
-            >
-            <label for="yearEnd">Endjahr</label>
-          </FloatLabel>
-        </div>
-        <div class="field col-12">
-          <FloatLabel variant="in">
-            <Textarea
-              v-model="createFormValues.description"
-              name="description"
-              class="w-full"
-              rows="5"
-              style="resize: none"
-            />
-            <label for="description">Beschreibung</label>
-          </FloatLabel>
-        </div>
-        <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
-            <InputNumber
-              v-model="createFormValues.episodeLength"
-              name="episodeLength"
-              class="w-full"
-              :useGrouping="false"
-            />
-            <Message
-              v-if="$createForm.episodeLength?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-              >{{ $createForm.episodeLength.error?.message }}</Message
-            >
-            <label for="length">Länge (Min.)</label>
+              >{{ $createForm.artist.error?.message }}</Message>
+              <label for="artist">Künstler</label>
           </FloatLabel>
         </div>
         <div class="field col-12 md:col-6">
@@ -646,6 +593,18 @@ fetchSeries()
               :disabled="state.genreListLoading"
             />
             <label for="genres">Genres</label>
+          </FloatLabel>
+        </div>
+        <div class="field col-12">
+          <FloatLabel variant="in">
+            <Textarea
+              v-model="createFormValues.description"
+              name="description"
+              class="w-full"
+              rows="5"
+              style="resize: none"
+            />
+            <label for="description">Beschreibung</label>
           </FloatLabel>
         </div>
         <div class="field col-12">
@@ -716,12 +675,12 @@ fetchSeries()
       </Form>
     </Dialog>
 
-    <!-- EDIT SERIES FORM DIALOG -->
+    <!-- EDIT MUSIC FORM DIALOG -->
     <Dialog
       @afterHide="clearEditDialogForm"
       v-model:visible="state.editDialogVisible"
       modal
-      header="Serie bearbeiten"
+      header="Musik bearbeiten"
       :style="{ width: '32rem' }"
     >
       <Form
@@ -743,75 +702,43 @@ fetchSeries()
               severity="error"
               size="small"
               variant="simple"
-              >{{ $editForm.name.error?.message }}</Message
-            >
-            <label for="name">Name</label>
+              >{{ $editForm.name.error?.message }}</Message>
+              <label for="name">Name</label>
           </FloatLabel>
         </div>
         <div class="field col-12 md:col-6">
           <FloatLabel variant="in">
             <InputNumber
-              v-model="editFormValues.yearStart"
-              name="yearStart"
+              v-model="editFormValues.year"
+              name="year"
               class="flex-auto w-full"
               :useGrouping="false"
             />
             <Message
-              v-if="$editForm.yearStart?.invalid"
+              v-if="$editForm.year?.invalid"
               severity="error"
               size="small"
               variant="simple"
-              >{{ $editForm.yearStart.error?.message }}</Message
+              >{{ $editForm.year.error?.message }}</Message
             >
-            <label for="yearStart">Erscheinungsjahr</label>
+            <label for="year">Erscheinungsjahr</label>
           </FloatLabel>
         </div>
         <div class="field col-12 md:col-6">
           <FloatLabel variant="in">
-            <InputNumber
-              v-model="editFormValues.yearEnd"
-              name="yearEnd"
+            <InputText
+              v-model="editFormValues.artist"
+              name="artist"
               class="flex-auto w-full"
-              :useGrouping="false"
+              autocomplete="off"
             />
             <Message
-              v-if="$editForm.yearEnd?.invalid"
+              v-if="$editForm.artist?.invalid"
               severity="error"
               size="small"
               variant="simple"
-              >{{ $editForm.yearEnd.error?.message }}</Message
-            >
-            <label for="yearEnd">Endjahr</label>
-          </FloatLabel>
-        </div>
-        <div class="field col-12">
-          <FloatLabel variant="in">
-            <Textarea
-              v-model="editFormValues.description"
-              name="description"
-              class="w-full"
-              rows="5"
-              style="resize: none"
-            />
-            <label for="description">Beschreibung</label>
-          </FloatLabel>
-        </div>
-        <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
-            <InputNumber
-              v-model="editFormValues.episodeLength"
-              name="episodeLength"
-              class="w-full"
-              :useGrouping="false"
-            />
-            <Message
-              v-if="$editForm.episodeLength?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-              >{{ $editForm.length.error?.message }}</Message
-            >
-            <label for="length">Länge (Min.)</label>
+              >{{ $editForm.artist.error?.message }}</Message>
+              <label for="artist">Künstler</label>
           </FloatLabel>
         </div>
         <div class="field col-12 md:col-6">
@@ -834,22 +761,34 @@ fetchSeries()
             <label for="genres">Genres</label>
           </FloatLabel>
         </div>
+        <div class="field col-12">
+          <FloatLabel variant="in">
+            <Textarea
+              v-model="editFormValues.description"
+              name="description"
+              class="w-full"
+              rows="5"
+              style="resize: none"
+            />
+            <label for="description">Beschreibung</label>
+          </FloatLabel>
+        </div>
         <div class="field col-6">
           <Button type="submit" severity="success" label="Bestätigen" />
         </div>
       </Form>
     </Dialog>
 
-    <!-- DELETE SERIES FORM DIALOG -->
+    <!-- DELETE MUSIC FORM DIALOG -->
     <Dialog
       v-model:visible="state.deleteDialogVisible"
       modal
-      header="Serie löschen"
+      header="Musik löschen"
       :closable="false"
       :style="{ width: '32rem' }"
     >
       <div class="flex flex-col gap-4">
-        <p>Möchten Sie die Serie "{{ state.deleteDialogSeriesName }}" wirklich löschen?</p>
+        <p>Möchten Sie die Musik "{{ state.deleteDialogMusicName }}" wirklich löschen?</p>
         <div class="flex justify-end gap-2">
           <Button
             label="Abbrechen"

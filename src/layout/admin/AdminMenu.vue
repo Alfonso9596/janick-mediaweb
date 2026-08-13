@@ -29,6 +29,12 @@ const model = ref([
       { label: 'Plattformen verwalten', vicon: 'fa-buffer', to: '/admin/games/platforms', key: '3-1'}
     ],
     key: '3'
+  },
+  {
+    label: 'Musik',
+    items: [
+      { label: 'Genres verwalten', vicon: 'fa-list', to: '/admin/music/genres', key: '4-0' }
+    ]
   }
 ])
 </script>

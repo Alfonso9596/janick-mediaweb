@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { Column, ContextMenu, DataTable, FloatLabel, InputText, Message, type DataTableRowContextMenuEvent } from 'primevue'
-import { createGamePlatform, deleteGamePlatform, editGamePlatform, getPageableGamePlatforms } from '@/api/networks/platforms.network'
+import { createMusicGenre, deleteMusicGenre, editMusicGenre, getPageableMusicGenres } from '@/api/networks/genres.network'
 import { computed, reactive, ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import type { Platform } from '@/types/common'
+import { zodResolver } from '@primevue/forms/resolvers/zod'
+import { z } from 'zod'
+import type { Genre } from '@/types/common'
 
 const toast = useToast()
 const cm = ref()
 
 const state = reactive<{
-  gamePlatformList: Platform[]
+  musicGenreList: Genre[]
   totalRecords: number
   totalPages: number
   page: number
@@ -20,13 +22,13 @@ const state = reactive<{
   searchName: string
   createDialogVisible: boolean
   editDialogVisible: boolean
-  editDialogPlatformId: number
+  editDialogGenreId: number
   deleteDialogVisible: boolean
-  deleteDialogPlatformName: string
-  deleteDialogPlatformId: number
-  selectedContextGamePlatform: Platform | null
+  deleteDialogGenreName: string
+  deleteDialogGenreId: number
+  selectedContextMusicGenre: Genre | null
 }>({
-  gamePlatformList: [],
+  musicGenreList: [],
   totalRecords: 0,
   totalPages: 0,
   page: 0,
@@ -37,11 +39,11 @@ const state = reactive<{
   searchName: '',
   createDialogVisible: false,
   editDialogVisible: false,
-  editDialogPlatformId: 0,
+  editDialogGenreId: 0,
   deleteDialogVisible: false,
-  deleteDialogPlatformName: '',
-  deleteDialogPlatformId: 0,
-  selectedContextGamePlatform: null
+  deleteDialogGenreName: '',
+  deleteDialogGenreId: 0,
+  selectedContextMusicGenre: null
 })
 
 const headers = computed(() => [
@@ -57,8 +59,8 @@ const contextMenuModel = ref([
     label: 'Bearbeiten',
     icon: 'pi pi-pencil',
     command: () => {
-      if (state.selectedContextGamePlatform == null) return
-      showEditGamePlatformDialog(state.selectedContextGamePlatform)
+      if (state.selectedContextMusicGenre == null) return
+      showEditMusicGenreDialog(state.selectedContextMusicGenre)
     }
   },
   {
@@ -66,116 +68,124 @@ const contextMenuModel = ref([
     icon: 'pi pi-trash',
     color: '#c73c3c',
     command: () => {
-      if (state.selectedContextGamePlatform == null) return
-      showDeleteGamePlatformDialog(state.selectedContextGamePlatform)
+      if (state.selectedContextMusicGenre == null) return
+      showDeleteMusicGenreDialog(state.selectedContextMusicGenre)
     }
   }
 ])
 
 const onRowContextMenu = (event: DataTableRowContextMenuEvent) => {
-  state.selectedContextGamePlatform = event.data
+  state.selectedContextMusicGenre = event.data
   cm.value.show(event.originalEvent)
 }
 
-const createGamePlatformInitialValues = reactive<{
+const createMusicGenreInitialValues = reactive<{
   name: string
 }>({
   name: ''
 })
 
-const createGamePlatformFormValues = reactive<{
+const createMusicGenreFormValues = reactive<{
   name: string
 }>({
   name: ''
 })
 
-const editGamePlatformFormValues = reactive<{
+const editMusicGenreFormValues = reactive<{
   name: string
 }>({
   name: ''
 })
 
-const onCreateGamePlatformFormSubmit = async (e: { valid: boolean }) => {
+const resolver = ref(
+  zodResolver(
+    z.object({
+      name: z.string().min(3, 'Das Genre muss mindestends 3 Zeichen lang sein.')
+    })
+  )
+)
+
+const onCreateMusicGenreFormSubmit = async (e: { valid: boolean }) => {
   if (e.valid) {
-    const createGamePlatformResponse = await createGamePlatform(createGamePlatformFormValues)
+    const createMusicGenreResponse = await createMusicGenre(createMusicGenreFormValues)
 
-    if (!createGamePlatformResponse) {
+    if (!createMusicGenreResponse) {
       toast.add({
         severity: 'error',
-        summary: 'Plattform "' + createGamePlatformFormValues.name + '" existiert bereits',
+        summary: 'Genre "' + createMusicGenreFormValues.name + '" existiert bereits',
         life: 5000,
       })
       return
     }
     toast.add({
       severity: 'success',
-      summary: 'Plattform "' + createGamePlatformFormValues.name + '" erfolgreich erstellt',
+      summary: 'Genre "' + createMusicGenreFormValues.name + '" erfolgreich erstellt',
       life: 3000
     })
     state.createDialogVisible = false
   }
-  fetchGamePlatforms()
+  fetchMusicGenres()
 }
 
-const onEditGamePlatformFormSubmit = async () => {
-  const editGamePlatformResponse = await editGamePlatform(state.editDialogPlatformId, editGamePlatformFormValues)
+const onEditMusicGenreFormSubmit = async () => {
+  const editMusicGenreResponse = await editMusicGenre(state.editDialogGenreId, editMusicGenreFormValues)
 
-  if (editGamePlatformResponse === false) {
+  if (editMusicGenreResponse === false) {
     toast.add({
       severity: 'error',
-      summary: 'Fehler beim Bearbeiten der Plattform "' + editGamePlatformFormValues.name + '"',
+      summary: 'Fehler beim Bearbeiten des Genres "' + editMusicGenreFormValues.name + '"',
       life: 5000
     })
   } else {
     toast.add({
       severity: 'success',
-      summary: 'Plattform "' + editGamePlatformFormValues.name + '" erfolgreich bearbeitet',
+      summary: 'Genre "' + editMusicGenreFormValues.name + '" erfolgreich bearbeitet',
       life: 3000
     })
   }
   state.editDialogVisible = false
-  fetchGamePlatforms()
+  fetchMusicGenres()
 }
 
-const onDeleteGamePlatformFormSubmit = async () => {
-  const deleteGamePlatformResponse = await deleteGamePlatform(state.deleteDialogPlatformId)
+const onDeleteMusicGenreFormSubmit = async () => {
+  const deleteMusicGenreResponse = await deleteMusicGenre(state.deleteDialogGenreId)
 
-  if (deleteGamePlatformResponse === false) {
+  if (deleteMusicGenreResponse === false) {
     toast.add({
       severity: 'error',
-      summary: 'Fehler beim Löschen der Plattform "' + state.deleteDialogPlatformName + '"',
+      summary: 'Fehler beim Löschen des Genres "' + state.deleteDialogGenreName + '"',
       life: 5000
     })
   } else {
     toast.add({
       severity: 'success',
-      summary: 'Plattform "' + state.deleteDialogPlatformName + '" erfolgreich gelöscht',
+      summary: 'Genre "' + state.deleteDialogGenreName + '" erfolgreich gelöscht',
       life: 3000
     })
   }
   state.deleteDialogVisible = false
-  fetchGamePlatforms()
+  fetchMusicGenres()
 }
 
 const clearCreateDialogForm = () => {
-  createGamePlatformFormValues.name = ''
+  createMusicGenreFormValues.name = ''
 }
 
-const showEditGamePlatformDialog = (platform: Platform) => {
-  state.editDialogPlatformId = platform.id
-  editGamePlatformFormValues.name = platform.name
+const showEditMusicGenreDialog = (genre: Genre) => {
+  state.editDialogGenreId = genre.id
+  editMusicGenreFormValues.name = genre.name
   state.editDialogVisible = true
 }
 
 const clearEditDialogForm = () => {
   state.editDialogVisible = false
 
-  editGamePlatformFormValues.name = ''
+  editMusicGenreFormValues.name = ''
 }
 
-const showDeleteGamePlatformDialog = async (platform: Platform) => {
-  state.deleteDialogPlatformName = platform.name
-  state.deleteDialogPlatformId = platform.id
+const showDeleteMusicGenreDialog = async (genre: Genre) => {
+  state.deleteDialogGenreName = genre.name
+  state.deleteDialogGenreId = genre.id
   state.deleteDialogVisible = true
 }
 
@@ -188,11 +198,11 @@ watch(
     state.searchName
   ],
   () => {
-    fetchGamePlatforms()
+    fetchMusicGenres()
   }
 )
 
-const fetchGamePlatforms = async () => {
+const fetchMusicGenres = async () => {
   state.loading = true
 
   const params = {
@@ -203,21 +213,21 @@ const fetchGamePlatforms = async () => {
     name: state.searchName ? state.searchName : ''
   }
 
-  const response = await getPageableGamePlatforms(params)
-  state.gamePlatformList = response.content
+  const response = await getPageableMusicGenres(params)
+  state.musicGenreList = response.content
   state.totalRecords = response.totalElements
   state.totalPages = response.totalPages
 
   state.loading = false
 }
 
-fetchGamePlatforms()
+fetchMusicGenres()
 </script>
 
 <template>
   <div class="card">
-    <div class="font-semibold text-xl mb-4">Plattformübersicht (Spiele)</div>
-    <ContextMenu ref="cm" :model="contextMenuModel" @hide="state.selectedContextGamePlatform = null">
+    <div class="font-semibold text-xl mb-4">Genreübersicht (Musik)</div>
+    <ContextMenu ref="cm" :model="contextMenuModel" @hide="state.selectedContextMusicGenre = null">
       <template #item="{ item, props }">
         <a class="flex items-center" v-bind="props.action" :style="{ 'background-color': item.color, 'border-radius': '2px' }">
           <span :class="item.icon" />
@@ -227,7 +237,7 @@ fetchGamePlatforms()
     </ContextMenu>
     <DataTable
       lazy
-      :value="state.gamePlatformList"
+      :value="state.musicGenreList"
       :paginator="true"
       :rows="state.pageSize"
       :rowsPerPageOptions="[10, 20, 50]"
@@ -240,7 +250,7 @@ fetchGamePlatforms()
       :sortField="state.sortBy"
       :sortOrder="state.sortDir === 'asc' ? 1 : -1"
       contextMenu
-      :contextMenuSelection="state.selectedContextGamePlatform"
+      :contextMenuSelection="state.selectedContextMusicGenre"
       @rowContextmenu="onRowContextMenu"
       @page="state.page = $event.page"
       @update:rows="state.pageSize = $event"
@@ -278,24 +288,25 @@ fetchGamePlatforms()
       </Column>
     </DataTable>
 
-    <!-- CREATE GAME PLATFORM FORM DIALOG -->
+    <!-- CREATE MUSIC GENRE FORM DIALOG -->
     <Dialog
       @afterHide="clearCreateDialogForm"
       v-model:visible="state.createDialogVisible"
       modal
-      header="Plattform erstellen"
+      header="Genre erstellen"
       :style="{ width: '32rem' }"
     >
       <Form
         v-slot="$createForm"
-        :initialValues="createGamePlatformInitialValues"
-        @submit="onCreateGamePlatformFormSubmit"
+        :resolver="resolver"
+        :initialValues="createMusicGenreInitialValues"
+        @submit="onCreateMusicGenreFormSubmit"
         class="formgrid grid"
       >
         <div class="field col-12">
           <FloatLabel variant="in">
             <InputText
-              v-model="createGamePlatformFormValues.name"
+              v-model="createMusicGenreFormValues.name"
               name="name"
               class="flex-auto"
               autocomplete="off"
@@ -315,23 +326,24 @@ fetchGamePlatforms()
       </Form>
     </Dialog>
 
-    <!-- EDIT GAME PLATFORM FORM DIALOG -->
+    <!-- EDIT MUSIC GENRE FORM DIALOG -->
     <Dialog
       @afterHide="clearEditDialogForm"
       v-model:visible="state.editDialogVisible"
       modal
-      header="Plattform bearbeiten"
+      header="Genre bearbeiten"
       :style="{ width: '32rem' }"
     >
       <Form
         v-slot="$editForm"
-        @submit="onEditGamePlatformFormSubmit"
+        :resolver="resolver"
+        @submit="onEditMusicGenreFormSubmit"
         class="formgrid grid"
       >
         <div class="field col-12">
           <FloatLabel variant="in">
             <InputText
-              v-model="editGamePlatformFormValues.name"
+              v-model="editMusicGenreFormValues.name"
               name="name"
               class="flex-auto"
               autocomplete="off"
@@ -351,16 +363,16 @@ fetchGamePlatforms()
       </Form>
     </Dialog>
 
-    <!-- DELETE GAME PLATFORM FORM DIALOG -->
+    <!-- DELETE MUSIC GENRE FORM DIALOG -->
     <Dialog
       v-model:visible="state.deleteDialogVisible"
       modal
-      header="Plattform löschen"
+      header="Genre löschen"
       :closable="false"
       :style="{ width: '32rem' }"
     >
       <div class="flex flex-col gap-4">
-        <p>Möchten Sie die Plattform "{{ state.deleteDialogPlatformName }}" wirklich löschen?</p>
+        <p>Möchten Sie das Genre "{{ state.deleteDialogGenreName }}" wirklich löschen?</p>
         <div class="flex justify-end gap-2">
           <Button
             label="Abbrechen"
@@ -370,7 +382,7 @@ fetchGamePlatforms()
           <Button
             label="Löschen"
             severity="danger"
-            @click="onDeleteGamePlatformFormSubmit"
+            @click="onDeleteMusicGenreFormSubmit"
           />
         </div>
       </div>

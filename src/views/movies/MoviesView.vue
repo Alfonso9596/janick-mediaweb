@@ -296,6 +296,7 @@ const onCreateFormSubmit = async (e: { valid: boolean }) => {
         createFormValues.posterFile,
         'MOVIE',
         createFormValues.name,
+        '',
         String(createFormValues.year),
       )
 
@@ -314,7 +315,6 @@ const onCreateFormSubmit = async (e: { valid: boolean }) => {
 
     if (!movieResponse) {
       if (createFormValues.posterFile) {
-        console.log('Failed movie upload, Poster succeeded')
         toast.add({
           severity: 'error',
           summary: 'Das Bild wurde hochgeladen, aber der Film wurde nicht gespeichert',
@@ -322,7 +322,6 @@ const onCreateFormSubmit = async (e: { valid: boolean }) => {
         })
         return
       } else {
-        console.log('Failed movie upload')
         toast.add({
           severity: 'error',
           summary: 'Der Film "' + createFormValues.name + '" existiert bereits',
@@ -346,7 +345,6 @@ const onEditFormSubmit = async () => {
   const editMovieResponse = await editMovie(state.editDialogMovieId, editFormValues)
 
   if (editMovieResponse === false) {
-    console.log('Failed movie edit')
     toast.add({
       severity: 'error',
       summary: 'Fehler beim Bearbeiten des Films "' + editFormValues.name + '"',
@@ -368,7 +366,6 @@ const onDeleteFormSubmit = async () => {
   const deleteMovieResponse = await deleteMovie(state.deleteDialogMovieId)
 
   if (deleteMovieResponse === false) {
-    console.log('Failed movie deletion')
     toast.add({
       severity: 'error',
       summary: 'Fehler beim Löschen des Films "' + state.deleteDialogMovieName + '"',

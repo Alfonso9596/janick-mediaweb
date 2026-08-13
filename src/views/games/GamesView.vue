@@ -295,7 +295,7 @@ const resolver = ref(
             message: "Das älteste Spiel ist 'Tennis for Two' aus dem Jahr 1958.",
           })
           .lt(new Date().getFullYear() + 1, {
-            message: 'Filme aus der Zukunft werden nicht akzeptiert.',
+            message: 'Spiele aus der Zukunft werden nicht akzeptiert.',
           }),
         z.literal(null),
       ]),
@@ -310,12 +310,13 @@ const onCreateFormSubmit = async (e: { valid: boolean }) => {
         createFormValues.posterFile,
         'GAME',
         createFormValues.name,
+        '',
         String(createFormValues.year),
       )
 
       if (!posterResponse) {
         console.error('Failed image upload')
-        useToast().add({
+        toast.add({
           severity: 'error',
           summary: 'Ein Poster für "' + createFormValues.name + '" konnte nicht hochgeladen werden.',
           life: 5000,
@@ -328,7 +329,6 @@ const onCreateFormSubmit = async (e: { valid: boolean }) => {
 
     if (!gameResponse) {
       if (createFormValues.posterFile) {
-        console.log('Failed game upload, Poster succeeded')
         toast.add({
           severity: 'error',
           summary: 'Das Bild wurde hochgeladen, aber das Spiel wurde nicht gespeichert',
@@ -336,7 +336,6 @@ const onCreateFormSubmit = async (e: { valid: boolean }) => {
         })
         return
       } else {
-        console.log('Failed game upload')
         toast.add({
           severity: 'error',
           summary: 'Das Spiel "' + createFormValues.name + '" existiert bereits',
@@ -360,7 +359,6 @@ const onEditFormSubmit = async () => {
   const editGameResponse = await editGame(state.editDialogGameId, editFormValues)
 
   if (editGameResponse === false) {
-    console.log('Failed series edit')
     toast.add({
       severity: 'error',
       summary: 'Fehler beim Bearbeiten des Spiels "' + editFormValues.name + '"',
@@ -382,7 +380,6 @@ const onDeleteFormSubmit = async () => {
   const deleteGameResponse = await deleteGame(state.deleteDialogGameId)
 
   if (deleteGameResponse === false) {
-    console.log('Failed game deletion')
     toast.add({
       severity: 'error',
       summary: 'Fehler beim Löschen des Spiels "' + state.deleteDialogGameName + '"',

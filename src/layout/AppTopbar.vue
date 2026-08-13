@@ -53,6 +53,11 @@ const userMenuItems = ref([
         label: 'Spiele',
         vicon: 'fa-gamepad',
         command: () => router.push('/admin/games/genres')
+      },
+      {
+        label: 'Musik',
+        vicon: 'fa-music',
+        command: () => router.push('/admin/music/genres')
       }
     ],
   },
@@ -60,7 +65,7 @@ const userMenuItems = ref([
     label: 'Profil',
     items: [
       {
-        label: 'Password ändern',
+        label: 'Passwort ändern',
         icon: 'pi pi-cog',
       },
       {

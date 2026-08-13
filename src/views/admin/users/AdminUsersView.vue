@@ -177,7 +177,6 @@ const onCreateUserFormSubmit = async (e: { valid: boolean}) => {
     const createUserResponse = await createUser(createUserFormValues)
 
     if (!createUserResponse) {
-      console.log('Failed user creation')
       toast.add({
         severity: 'error',
         summary: 'Benutzer "' + createUserFormValues.username + '" existiert bereits',
@@ -197,11 +196,9 @@ const onCreateUserFormSubmit = async (e: { valid: boolean}) => {
 }
 
 const onDeleteUserSubmit = async () => {
-  console.log('Deleting user with ID:', state.deleteDialogUserId)
   const deleteUserResponse = await deleteUser(state.deleteDialogUserId)
 
   if (deleteUserResponse === false) {
-    console.log('Failed user deletion')
     toast.add({
       severity: 'error',
       summary: 'Fehler beim Löschen des Benutzers "' + state.deleteDialogUsername + '"',
@@ -226,7 +223,6 @@ const onEditUserFormSubmit = async () => {
   const editUserResponse = await editUser(state.editDialogUserId, editUserFormValues)
 
   if (editUserResponse === false) {
-    console.log('Failed user edit')
     toast.add({
       severity: 'error',
       summary: 'Fehler beim Bearbeiten des Benutzers "' + editUserFormValues.username + '"',

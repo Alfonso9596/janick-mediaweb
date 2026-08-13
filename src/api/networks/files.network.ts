@@ -1,12 +1,13 @@
 import { httpForm } from '@/api/http'
 import { getParamsFromPath, getPathWithParams } from '@/helpers/url.helper'
+import type { AxiosRequestConfig } from 'axios'
 
 const FILES_ENDPOINTS = {
   uploadPoster: '/files/uploadPoster?mediaType=:mediaType',
   uploadFile: '/files?mediaType=:mediaType'
 }
 
-const uploadNewPoster = async (file: File, mediaType: string, title: string, year: string) => {
+const uploadNewPoster = async (file: File, mediaType: string, title: string, artist: string, year: string) => {
   try {
     let path = FILES_ENDPOINTS.uploadPoster
     if (getParamsFromPath(path)?.length) {
@@ -17,6 +18,7 @@ const uploadNewPoster = async (file: File, mediaType: string, title: string, yea
     const formData = new FormData()
 
     formData.append('filename', title)
+    formData.append('artist', artist)
     formData.append('year', year)
     formData.append('file', file)
 
@@ -28,7 +30,7 @@ const uploadNewPoster = async (file: File, mediaType: string, title: string, yea
   }
 }
 
-const uploadFile = async (file: File, mediaType: string, mediaId: number) => {
+const uploadFile = async (file: File, mediaType: string, mediaId: number, config?: AxiosRequestConfig) => {
   try {
     let path = FILES_ENDPOINTS.uploadFile
     if (getParamsFromPath(path)?.length) {
@@ -41,7 +43,12 @@ const uploadFile = async (file: File, mediaType: string, mediaId: number) => {
     formData.append('mediaId', String(mediaId))
     formData.append('file', file)
 
-    const response = await httpForm.post(path, formData)
+    let response = null
+    if (config) {
+      response = await httpForm.post(path, formData, config)
+    } else {
+      response = await httpForm.post(path, formData)
+    }
     return response
   } catch (e) {
     console.error(e)

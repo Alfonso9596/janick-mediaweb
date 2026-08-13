@@ -51,6 +51,18 @@ const routes = [
         component: () => import('@/views/games/GamesDetailsView.vue'),
         meta: { requiresAuth: true, roles: ['USER', 'ADMIN'] },
       },
+      {
+        path: '/music',
+        name: 'Musik',
+        component: () => import('@/views/music/MusicView.vue'),
+        meta: { requiresAuth: true, roles: ['USER', 'ADMIN'] },
+      },
+      {
+        path: '/music/:id',
+        name: 'musicDetails',
+        component: () => import('@/views/music/MusicDetailsView.vue'),
+        meta: { requiresAuth: true, roles: ['USER', 'ADMIN'] },
+      }
     ],
   },
   // Administration Routes
@@ -82,6 +94,11 @@ const routes = [
       {
         path: '/admin/games/platforms',
         component: () => import('@/views/admin/games/AdminGamePlatformView.vue'),
+        meta: { requiresAuth: true, roles: ['ADMIN'] }
+      },
+      {
+        path: '/admin/music/genres',
+        component: () => import('@/views/admin/music/AdminMusicGenreView.vue'),
         meta: { requiresAuth: true, roles: ['ADMIN'] }
       }
     ],
