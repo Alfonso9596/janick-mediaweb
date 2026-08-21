@@ -299,6 +299,7 @@ fetchGamePlatforms()
               name="name"
               class="flex-auto"
               autocomplete="off"
+              autofocus
             />
             <Message
               v-if="$createForm.name?.invalid"
@@ -335,6 +336,7 @@ fetchGamePlatforms()
               name="name"
               class="flex-auto"
               autocomplete="off"
+              autofocus
             />
             <Message
               v-if="$editForm.name?.invalid"

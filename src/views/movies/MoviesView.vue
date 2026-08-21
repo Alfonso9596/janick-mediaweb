@@ -545,6 +545,7 @@ fetchMovies()
               name="name"
               class="flex-auto w-full"
               autocomplete="off"
+              autofocus
             />
             <Message
               v-if="$createForm.name?.invalid"
@@ -713,6 +714,7 @@ fetchMovies()
               name="name"
               class="flex-auto w-full"
               autocomplete="off"
+              autofocus
             />
             <Message
               v-if="$editForm.name?.invalid"

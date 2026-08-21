@@ -426,6 +426,7 @@ fetchRoleList()
               name="username"
               class="flex-auto"
               autocomplete="off"
+              autofocus
             />
             <Message
               v-if="$createForm.username?.invalid"
@@ -512,6 +513,7 @@ fetchRoleList()
               name="username"
               class="flex-auto"
               autocomplete="off"
+              autofocus
             />
             <Message
               v-if="$editUserForm.username?.invalid"

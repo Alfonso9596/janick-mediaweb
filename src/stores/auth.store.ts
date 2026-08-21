@@ -40,6 +40,18 @@ async function register(username: string | undefined, password: string | undefin
   return true
 }
 
+async function changePassword(currentPassword: string, newPassword: string) {
+  if (!currentPassword || !newPassword) {
+    return false
+  }
+  const response = await AuthenticationNetwork.changePasswordRequest(currentPassword, newPassword)
+  if (!response) {
+    return false
+  }
+
+  return true
+}
+
 export const useAuthStore = defineStore('auth', () => {
   const accessToken: Ref<string | undefined> = ref(
     localStorage.getItem(AUTH_KEYS.ACCESS_TOKEN) || undefined,
@@ -177,6 +189,7 @@ export const useAuthStore = defineStore('auth', () => {
     roles,
     login,
     register,
+    changePassword,
     logout,
     isAuthenticatedAsync,
     hasRole,

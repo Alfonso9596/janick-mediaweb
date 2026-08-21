@@ -533,6 +533,7 @@ fetchMusic()
               name="name"
               class="flex-auto w-full"
               autocomplete="off"
+              autofocus
             />
             <Message
               v-if="$createForm.name?.invalid"
@@ -699,6 +700,7 @@ fetchMusic()
               name="name"
               class="flex-auto w-full"
               autocomplete="off"
+              autofocus
             />
             <Message
               v-if="$editForm.name?.invalid"

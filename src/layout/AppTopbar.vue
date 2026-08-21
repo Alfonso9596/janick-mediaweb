@@ -17,6 +17,7 @@ const { toggleMenu, executeDarkModeToggle, isDarkTheme, isPageLoading } = useLay
 const userDialog = ref()
 const loginDialog = ref(false)
 const isUserLoggedIn = ref(false)
+const changePasswordDialog = ref(false)
 
 const props = defineProps({
   isAdminPanel: {
@@ -67,6 +68,7 @@ const userMenuItems = ref([
       {
         label: 'Passwort ändern',
         icon: 'pi pi-cog',
+        command: () => changePasswordDialog.value = true
       },
       {
         label: 'Abmelden',
@@ -77,12 +79,20 @@ const userMenuItems = ref([
   },
 ])
 
-const defaultFormValues = reactive<{
+const defaultLoginFormValues = reactive<{
   username: string
   password: string
 }>({
   username: '',
   password: '',
+})
+
+const defaultChangePasswordFormValues = reactive<{
+  currentPassword: string
+  newPassword: string
+}>({
+  currentPassword: '',
+  newPassword: '',
 })
 
 const loginFormValues = reactive<{
@@ -93,11 +103,28 @@ const loginFormValues = reactive<{
   password: '',
 })
 
+const changePasswordFormValues = reactive<{
+  currentPassword: string
+  newPassword: string
+}>({
+  currentPassword: '',
+  newPassword: '',
+})
+
 const registerResolver = ref(
   zodResolver(
     z.object({
       username: z.string().min(1, { message: 'Der Nutzername wird benötigt' }),
       password: z.string().min(1, { message: 'Das Passwort wird benötigt' }),
+    }),
+  ),
+)
+
+const changePasswordResolver = ref(
+  zodResolver(
+    z.object({
+      currentPassword: z.string().min(1, { message: 'Das alte Passwort wird benötigt' }),
+      newPassword: z.string().min(1, { message: 'Das neue Passwort wird benötigt' }),
     }),
   ),
 )
@@ -119,14 +146,38 @@ const onLoginFormSubmit = async () => {
       severity: 'success',
       summary: `Willkommen zurück ${authStore.decodedToken?.sub}`,
       detail: 'Du wurdest erfolgreich eingeloggt',
-      life: 5000,
+      life: 3000,
+    })
+  }
+}
+
+const onChangePasswordFormSubmit = async () => {
+  const response = await authStore.changePassword(changePasswordFormValues.currentPassword, changePasswordFormValues.newPassword)
+  if (response === false) {
+    toast.add({
+      severity: 'error',
+      summary: 'Passwortänderung fehlgeschlagen',
+      life: 5000
+    })
+  } else {
+    changePasswordDialog.value = false
+    clearChangePasswordForm()
+    toast.add({
+      severity: 'success',
+      summary: 'Passwort erfolgreich geändert',
+      life: 3000
     })
   }
 }
 
 const clearLoginForm = () => {
-  loginFormValues.username = defaultFormValues.username
-  loginFormValues.password = defaultFormValues.password
+  loginFormValues.username = defaultLoginFormValues.username
+  loginFormValues.password = defaultLoginFormValues.password
+}
+
+const clearChangePasswordForm = () => {
+  changePasswordFormValues.currentPassword = defaultChangePasswordFormValues.currentPassword
+  changePasswordFormValues.newPassword = defaultChangePasswordFormValues.newPassword
 }
 
 const onLogout = async () => {
@@ -298,6 +349,8 @@ function onDarkThemeChange() {
         </div>
       </div>
     </div>
+
+    <!-- LOGIN FORM DIALOG -->
     <Dialog
       v-model:visible="loginDialog"
       pt:root:class="!border-0 !bg-transparent"
@@ -321,7 +374,7 @@ function onDarkThemeChange() {
           <Form
             v-slot="$registerForm"
             class="flex flex-col"
-            :initialValues="defaultFormValues"
+            :initialValues="defaultLoginFormValues"
             :resolver="registerResolver"
             @submit="onLoginFormSubmit"
           >
@@ -332,6 +385,7 @@ function onDarkThemeChange() {
                   name="username"
                   class="flex-auto"
                   autocomplete="off"
+                  autofocus
                 />
                 <Message
                   v-if="$registerForm.username?.invalid"
@@ -373,6 +427,57 @@ function onDarkThemeChange() {
           </Form>
         </div>
       </template>
+    </Dialog>
+
+    <!-- CHANGE PASSWORD FORM DIALOG -->
+    <Dialog
+      v-model:visible="changePasswordDialog"
+      modal
+      header="Password ändern"
+      @hide="clearChangePasswordForm"
+    >
+      <Form
+        v-slot="$changePasswordForm"
+        class="flex flex-col"
+        :initialValues="defaultChangePasswordFormValues"
+        :resolver="changePasswordResolver"
+        @submit="onChangePasswordFormSubmit"
+      >
+        <div class="flex flex-col gap-4">
+          <div class="flex flex-col gap-1.5">
+            <FloatLabel variant="in">
+              <Password v-model="changePasswordFormValues.currentPassword" name="currentPassword" autofocus />
+              <Message
+                v-if="$changePasswordForm.currentPassword?.invalid"
+                severity="error"
+                size="small"
+                variant="simple"
+              >
+                {{ $changePasswordForm.currentPassword.error?.message }}
+              </Message>
+              <label for="currentPassword">Altes Passwort</label>
+            </FloatLabel>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <FloatLabel variant="in">
+              <Password v-model="changePasswordFormValues.newPassword" name="newPassword" />
+              <Message
+                v-if="$changePasswordForm.newPassword?.invalid"
+                severity="error"
+                size="small"
+                variant="simple"
+              >
+                {{ $changePasswordForm.newPassword.error?.message }}
+              </Message>
+              <label for="newPassword">Neues Password</label>
+            </FloatLabel>
+          </div>
+          <div class="inline-flex flex-row gap-4">
+            <Button severity="secondary" @click="changePasswordDialog = false">Abbrechen</Button>
+            <Button type="submit" severity="success" label="Bestätigen" />
+          </div>
+        </div>
+      </Form>
     </Dialog>
   </div>
 </template>

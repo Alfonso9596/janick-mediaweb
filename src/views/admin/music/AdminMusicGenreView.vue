@@ -310,6 +310,7 @@ fetchMusicGenres()
               name="name"
               class="flex-auto"
               autocomplete="off"
+              autofocus
             />
             <Message
               v-if="$createForm.name?.invalid"
@@ -347,6 +348,7 @@ fetchMusicGenres()
               name="name"
               class="flex-auto"
               autocomplete="off"
+              autofocus
             />
             <Message
               v-if="$editForm.name?.invalid"

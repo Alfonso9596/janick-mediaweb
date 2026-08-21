@@ -4,6 +4,7 @@ enum AUTHENTICATION_ENDPOINTS {
   loginRequest = '/auth/login',
   logoutRequest = '/auth/logout',
   registerRequest = '/auth/register',
+  changePasswordRequest = '/auth/changepassword',
   refreshTokenRequest = '/auth/refreshtoken',
 }
 
@@ -53,6 +54,19 @@ const registerReqeust = async (username: string, password: string) => {
   }
 }
 
+const changePasswordRequest = async (currentPassword: string, newPassword: string) => {
+  try {
+    const response = await http.put(AUTHENTICATION_ENDPOINTS.changePasswordRequest, {
+      currentPassword,
+      newPassword
+    })
+    return response
+  } catch (e) {
+    console.error(e)
+    return false
+  }
+}
+
 export {
   loginRequest,
   logoutRequest,
@@ -60,4 +74,4 @@ export {
   registerReqeust,
   AUTHENTICATION_ENDPOINTS,
 }
-export default { loginRequest, logoutRequest, refreshTokenRequest, registerReqeust }
+export default { loginRequest, logoutRequest, refreshTokenRequest, changePasswordRequest, registerReqeust }
