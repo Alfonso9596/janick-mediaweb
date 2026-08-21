@@ -1,0 +1,17 @@
+.quill-toolbar {
+  border: 1px solid var(--p-inputtext-border-color) !important;
+  border-radius: var(--p-inputtext-border-radius) var(--p-inputtext-border-radius) 0 0 !important;
+  background: var(--p-inputtext-background) !important;
+  color: var(--p-inputtext-color) !important;
+}
+
+.quill-editor {
+  border: 1px solid var(--p-inputtext-border-color) !important;
+  border-top: 0 !important;
+  border-radius: 0 0 var(--p-inputtext-border-radius) var(--p-inputtext-border-radius) !important;
+  font-family: var(--p-typography-font-family) !important;
+  font-weight: var(--p-inputtext-font-weight) !important;
+  font-size: var(--p-inputtext-font-size) !important;
+  background: var(--p-inputtext-background) !important;
+  color: var(--p-inputtext-color) !important;
+}

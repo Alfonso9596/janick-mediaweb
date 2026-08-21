@@ -211,6 +211,7 @@ const contextMenuModel = ref([
   {
     label: 'Löschen',
     icon: 'pi pi-trash',
+    color: '#c73c3c',
     disabled: () => {
       return (authStore.decodedToken?.sub !== state.selectedContextMusic?.user?.username) &&
         (!authStore.roles?.includes('ADMIN'))

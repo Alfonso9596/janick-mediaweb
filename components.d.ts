@@ -38,6 +38,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     Select: typeof import('primevue/select')['default']
     Textarea: typeof import('primevue/textarea')['default']
+    TextEditor: typeof import('./src/components/TextEditor.vue')['default']
     Toast: typeof import('primevue/toast')['default']
     TreeStructure: typeof import('./src/components/TreeStructure.vue')['default']
   }
