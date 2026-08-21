@@ -12,6 +12,7 @@ import router from '@/router'
 import type { Movie, Genre } from '@/types/common'
 import { useAuthStore } from '@/stores/auth.store'
 import { getAllMovieGenres } from '@/api/networks/genres.network'
+import { Times } from '@primeicons/vue'
 
 const apiUrl = import.meta.env.VITE_API_URL
 const movieStore = useMovieStore()
@@ -479,7 +480,7 @@ fetchMovies()
             optionLabel="name"
             optionValue="name"
             placeholder="Filtern nach Genre"
-            showClear
+            :showClear="state.searchGenre !== ''"
             class="md:w-56 ml-2"
             :loading="state.genreListLoading"
             :disabled="state.genreListLoading"
@@ -489,7 +490,9 @@ fetchMovies()
               <i class="pi pi-search" />
             </InputIcon>
             <InputText v-model="state.searchName" placeholder="Suche..." />
-            <InputIcon class="pi pi-times" style="cursor: pointer" @click="state.searchName = ''" />
+            <InputIcon v-if="state.searchName" class="cursor-pointer" @click="state.searchName = ''">
+              <Times />
+            </InputIcon>
           </IconField>
         </div>
       </template>

@@ -13,6 +13,7 @@ import router from '@/router'
 import type { Game, Genre, Platform } from '@/types/common'
 import { getAllGameGenres } from '@/api/networks/genres.network'
 import { getAllGamePlatforms } from '@/api/networks/platforms.network'
+import { Times } from '@primeicons/vue'
 
 const apiUrl = import.meta.env.VITE_API_URL
 const gameStore = useGameStore()
@@ -488,7 +489,7 @@ fetchGames()
             optionLabel="name"
             optionValue="name"
             placeholder="Filtern nach Genre"
-            showClear
+            :showClear="state.searchGenre !== ''"
             class="md:w-56 ml-2"
             :loading="state.genreListLoading"
             :disabled="state.genreListLoading"
@@ -500,7 +501,7 @@ fetchGames()
             optionLabel="name"
             optionValue="name"
             placeholder="Filtern nach Plattform"
-            showClear
+            :showClear="state.searchPlatform !== ''"
             class="md:w-56 ml-2"
             :loading="state.platformListLoading"
             :disabled="state.platformListLoading"
@@ -513,7 +514,9 @@ fetchGames()
               v-model="state.searchName"
               placeholder="Suche..."
             />
-            <InputIcon class="pi pi-times" style="cursor: pointer" @click="state.searchName = ''" />
+            <InputIcon v-if="state.searchName" class="cursor-pointer" @click="state.searchName = ''">
+              <Times />
+            </InputIcon>
           </IconField>
         </div>
       </template>
