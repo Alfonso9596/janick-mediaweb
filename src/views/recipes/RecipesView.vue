@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, shallowRef, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { getPageableRecipes, createNewRecipe, editRecipe, deleteRecipe } from '@/api/networks/recipes.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useRecipeStore } from '@/stores/recipes.store'
@@ -9,7 +9,7 @@ import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
 import { useToast } from 'primevue'
 import router from '@/router'
-import type { ContextMenuInstance, MealType, Recipe } from '@/types/common'
+import type { MealType, Recipe } from '@/types/common'
 import { useAuthStore } from '@/stores/auth.store'
 import { getAllMealTypes } from '@/api/networks/mealTypes.network'
 import { Check, Times } from '@primeicons/vue'
@@ -19,7 +19,7 @@ const recipeStore = useRecipeStore()
 const authStore = useAuthStore()
 const currentRoute = useRoute()
 const toast = useToast()
-const cm = shallowRef<ContextMenuInstance | null>(null)
+const cm = ref<InstanceType<typeof ContextMenu> | null>(null)
 
 const state = reactive<{
   recipeList: Recipe[]
@@ -216,7 +216,7 @@ const contextMenuModel = ref([
     icon: 'pi pi-pencil',
     disabled: () => {
       return (authStore.decodedToken?.sub !== state.selectedContextRecipe?.user?.username) &&
-        (!authStore.roles?.includes('ADMIN'))
+        (!authStore.isUserAdmin())
     },
     command: () => {
       if (state.selectedContextRecipe == null) return
@@ -232,7 +232,7 @@ const contextMenuModel = ref([
     color: '#c73c3c',
     disabled: () => {
       return (authStore.decodedToken?.sub !== state.selectedContextRecipe?.user?.username) &&
-        (!authStore.roles?.includes('ADMIN'))
+        (!authStore.isUserAdmin())
     },
     command: () => {
       if (state.selectedContextRecipe == null) return
@@ -436,8 +436,10 @@ function onPosterRemove() {
   createFormValues.posterFile = null
 }
 
-fetchMealTypeList()
-fetchRecipes()
+onMounted(() => {
+  fetchMealTypeList()
+  fetchRecipes()
+})
 </script>
 <template>
   <div class="card">
@@ -493,6 +495,7 @@ fetchRecipes()
             class="md:w-56 ml-2"
             :loading="state.mealTypeListLoading"
             :disabled="state.mealTypeListLoading"
+            aria-label="Filtern nach Mahlzeitart"
           />
           <IconField class="ml-2">
             <InputIcon>
@@ -593,6 +596,7 @@ fetchRecipes()
           <FloatLabel variant="in">
             <Textarea
               v-model="createFormValues.description"
+              id="description"
               name="description"
               class="w-full"
               rows="5"
@@ -753,12 +757,13 @@ fetchRecipes()
           <FloatLabel variant="in">
             <Textarea
               v-model="editFormValues.description"
-              name="description"
+              id="editDescription"
+              name="editDescription"
               class="w-full"
               rows="5"
               style="resize: none"
             />
-            <label for="description">Beschreibung</label>
+            <label for="editDescription">Beschreibung</label>
           </FloatLabel>
         </div>
         <div class="flex justify-start gap-2 field col-12 md:col-6">

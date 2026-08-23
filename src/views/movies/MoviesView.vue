@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { getPageableMovies, createNewMovie, editMovie, deleteMovie } from '@/api/networks/movies.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useMovieStore } from '@/stores/movies.store'
@@ -19,7 +19,7 @@ const movieStore = useMovieStore()
 const authStore = useAuthStore()
 const currentRoute = useRoute()
 const toast = useToast()
-const cm = ref()
+const cm = ref<InstanceType<typeof ContextMenu> | null>(null)
 
 const state = reactive<{
   movieList: Movie[]
@@ -197,7 +197,7 @@ const contextMenuModel = ref([
     icon: 'pi pi-pencil',
     disabled: () => {
       return (authStore.decodedToken?.sub !== state.selectedContextMovie?.user?.username) &&
-        (!authStore.roles?.includes('ADMIN'))
+        (!authStore.isUserAdmin())
     },
     command: () => {
       if (state.selectedContextMovie == null) return
@@ -213,7 +213,7 @@ const contextMenuModel = ref([
     color: '#c73c3c',
     disabled: () => {
       return (authStore.decodedToken?.sub !== state.selectedContextMovie?.user?.username) &&
-        (!authStore.roles?.includes('ADMIN'))
+        (!authStore.isUserAdmin())
     },
     command: () => {
       if (state.selectedContextMovie == null) return
@@ -224,7 +224,7 @@ const contextMenuModel = ref([
 
 const onRowContextMenu = (event: DataTableRowContextMenuEvent) => {
   state.selectedContextMovie = event.data
-  cm.value.show(event.originalEvent)
+  cm.value?.show(event.originalEvent)
 }
 
 const onRowClick = (event: DataTableRowClickEvent) => {
@@ -426,8 +426,10 @@ function onPosterRemove() {
   createFormValues.posterFile = null
 }
 
-fetchGenreList()
-fetchMovies()
+onMounted(() => {
+  fetchGenreList()
+  fetchMovies()
+})
 </script>
 
 <template>
@@ -484,6 +486,7 @@ fetchMovies()
             class="md:w-56 ml-2"
             :loading="state.genreListLoading"
             :disabled="state.genreListLoading"
+            aria-label="Filtern nach Genre"
           />
           <IconField class="ml-2">
             <InputIcon>
@@ -579,6 +582,7 @@ fetchMovies()
           <FloatLabel variant="in">
             <Textarea
               v-model="createFormValues.description"
+              id="description"
               name="description"
               class="w-full"
               rows="5"
@@ -748,12 +752,13 @@ fetchMovies()
           <FloatLabel variant="in">
             <Textarea
               v-model="editFormValues.description"
-              name="description"
+              id="editDescription"
+              name="editDescription"
               class="w-full"
               rows="5"
               style="resize: none"
             />
-            <label for="description">Beschreibung</label>
+            <label for="editDescription">Beschreibung</label>
           </FloatLabel>
         </div>
         <div class="field col-12 md:col-6">

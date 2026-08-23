@@ -14,7 +14,7 @@ const authStore = useAuthStore()
 const router = useRouter()
 const toast = useToast()
 const { toggleMenu, executeDarkModeToggle, isDarkTheme, isPageLoading } = useLayout()
-const userDialog = ref()
+const userDialog = ref<InstanceType<typeof Popover> | null>(null)
 const loginDialog = ref(false)
 const isUserLoggedIn = ref(false)
 const changePasswordDialog = ref(false)
@@ -27,13 +27,13 @@ const props = defineProps({
 })
 
 const toggleUserDialog = (event: PointerEvent) => {
-  userDialog.value.toggle(event)
+  userDialog.value?.toggle(event)
 }
 
 const userMenuItems = ref([
   {
     label: 'Administration',
-    visible: () => authStore.hasRole('ADMIN') ?? false,
+    visible: () => authStore.isUserAdmin() ?? false,
     items: [
       {
         label: 'Dashboard',
@@ -186,7 +186,7 @@ const clearChangePasswordForm = () => {
 }
 
 const onLogout = async () => {
-  userDialog.value.hide()
+  userDialog.value?.hide()
   await authStore.logout()
   isUserLoggedIn.value = false
   router.push('/')
@@ -234,7 +234,7 @@ function onDarkThemeChange() {
 <template>
   <div class="layout-topbar">
     <div class="layout-topbar-logo-container">
-      <button class="layout-menu-button layout-topbar-action" @click="toggleMenu">
+      <button type="button" class="layout-menu-button layout-topbar-action" @click="toggleMenu">
         <i class="pi pi-bars"></i>
       </button>
       <router-link to="/" class="layout-topbar-logo">
@@ -299,6 +299,7 @@ function onDarkThemeChange() {
       </div>
 
       <button
+        type="button"
         class="layout-topbar-menu-button layout-topbar-action"
         v-styleclass="{
           selector: '@next',

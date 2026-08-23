@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Column, ContextMenu, DataTable, FloatLabel, InputText, Message, type DataTableRowContextMenuEvent } from 'primevue'
 import { createGamePlatform, deleteGamePlatform, editGamePlatform, getPageableGamePlatforms } from '@/api/networks/platforms.network'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import type { Platform } from '@/types/common'
 
 const toast = useToast()
-const cm = ref()
+const cm = ref<InstanceType<typeof ContextMenu> | null>(null)
 
 const state = reactive<{
   gamePlatformList: Platform[]
@@ -74,7 +74,7 @@ const contextMenuModel = ref([
 
 const onRowContextMenu = (event: DataTableRowContextMenuEvent) => {
   state.selectedContextGamePlatform = event.data
-  cm.value.show(event.originalEvent)
+  cm.value?.show(event.originalEvent)
 }
 
 const createGamePlatformInitialValues = reactive<{
@@ -210,8 +210,9 @@ const fetchGamePlatforms = async () => {
 
   state.loading = false
 }
-
-fetchGamePlatforms()
+onMounted(() => {
+  fetchGamePlatforms()
+})
 </script>
 
 <template>

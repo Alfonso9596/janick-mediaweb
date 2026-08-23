@@ -27,10 +27,6 @@ const preset = ref(layoutConfig.preset)
 const presetOptions = ref(Object.keys(presets))
 
 const menuMode = ref(layoutConfig.menuMode)
-const menuModeOptions = ref([
-  { label: 'Static', value: 'static' },
-  { label: 'Overlay', value: 'overlay' },
-])
 
 const primaryColors = ref([
   { name: 'noir', palette: {} },
@@ -554,11 +550,6 @@ function onPresetChange() {
     .use({ useDefaultOptions: true })
 }
 
-function onMenuModeChange() {
-  layoutConfig.menuMode = menuMode.value
-  configuratorStore.setConfiguratorMenumode(menuMode.value)
-}
-
 function setupConfiguratorFromStorage() {
   layoutConfig.darkTheme = configuratorStore.configuratorDarktheme
   layoutConfig.menuMode = configuratorStore.configuratorMenumode
@@ -572,8 +563,8 @@ function setupConfiguratorFromStorage() {
     primaryColors.value.find((p) => p.name === configuratorStore.configuratorPrimary) || primaryColors.value[0]
   const surface = surfaces.value.find((s) => s.name === configuratorStore.configuratorSurface) || surfaces.value[0]
   // cast to any to satisfy ThemeColor palette shape at runtime
-  updateColors('primary', primary as any)
-  updateColors('surface', surface as any)
+  updateColors('primary', primary as ThemeColor)
+  updateColors('surface', surface as ThemeColor)
 
   if (configuratorStore.configuratorDarktheme) {
     document.documentElement.classList.add('app-dark')

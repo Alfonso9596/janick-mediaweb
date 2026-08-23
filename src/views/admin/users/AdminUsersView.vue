@@ -14,7 +14,7 @@ import {
 } from 'primevue'
 import { getAllRoles, getPageableUsers, createUser, deleteUser, editUser } from '@/api/networks/admin.network'
 import { useAuthStore } from '@/stores/auth.store'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
@@ -22,7 +22,7 @@ import type { User, Role } from '@/types/common'
 
 const toast = useToast()
 const authStore = useAuthStore()
-const cm = ref()
+const cm = ref<InstanceType<typeof ContextMenu> | null>(null)
 
 const state = reactive<{
   userList: User[]
@@ -113,7 +113,7 @@ const contextMenuModel = ref([
 
 const onRowContextMenu = (event: DataTableRowContextMenuEvent) => {
   state.selectedContextUser = event.data
-  cm.value.show(event.originalEvent)
+  cm.value?.show(event.originalEvent)
 }
 
 const createUserInitialValues = reactive<{
@@ -315,8 +315,10 @@ const fetchRoleList = async () => {
   state.roleListLoading = false
 }
 
-fetchUsers()
-fetchRoleList()
+onMounted(() => {
+  fetchUsers()
+  fetchRoleList()
+})
 </script>
 
 <template>
@@ -381,7 +383,7 @@ fetchRoleList()
           <div v-if="header.type === 'array'">
             <Chip class="mr-2" v-for="role in data[header.key]" :key="role" :label="role">
               <template #icon>
-                <v-icon  v-if="role === 'ADMIN'" name="fa-user-shield" />
+                <v-icon v-if="role === 'ADMIN'" name="fa-user-shield" />
                 <v-icon v-else name="fa-user" />
               </template>
             </Chip>

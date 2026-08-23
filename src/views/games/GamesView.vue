@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { getPageableGames, createNewGame, editGame, deleteGame } from '@/api/networks/games.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useGameStore } from '@/stores/games.store'
@@ -20,7 +20,7 @@ const gameStore = useGameStore()
 const authStore = useAuthStore()
 const currentRoute = useRoute()
 const toast = useToast()
-const cm = ref()
+const cm = ref<InstanceType<typeof ContextMenu> | null>(null)
 
 const state = reactive<{
   gameList: Game[]
@@ -207,7 +207,7 @@ const contextMenuModel = ref([
     icon: 'pi pi-pencil',
     disabled: () => {
       return (authStore.decodedToken?.sub !== state.selectedContextGame?.user?.username) &&
-        (!authStore.roles?.includes('ADMIN'))
+        (!authStore.isUserAdmin())
     },
     command: () => {
       if (state.selectedContextGame == null) return
@@ -223,7 +223,7 @@ const contextMenuModel = ref([
     color: '#c73c3c',
     disabled: () => {
       return (authStore.decodedToken?.sub !== state.selectedContextGame?.user?.username) &&
-        (!authStore.roles?.includes('ADMIN'))
+        (!authStore.isUserAdmin())
     },
     command: () => {
       if (state.selectedContextGame == null) return
@@ -234,7 +234,7 @@ const contextMenuModel = ref([
 
 const onRowContextMenu = (event: DataTableRowContextMenuEvent) => {
   state.selectedContextGame = event.data
-  cm.value.show(event.originalEvent)
+  cm.value?.show(event.originalEvent)
 }
 
 const onRowClick = (event: DataTableRowClickEvent) => {
@@ -439,9 +439,11 @@ function onPosterRemove() {
   createFormValues.posterFile = null
 }
 
-fetchGenreList()
-fetchPlatformList()
-fetchGames()
+onMounted(() => {
+  fetchGenreList()
+  fetchPlatformList()
+  fetchGames()
+})
 </script>
 
 <template>
@@ -493,6 +495,7 @@ fetchGames()
             class="md:w-56 ml-2"
             :loading="state.genreListLoading"
             :disabled="state.genreListLoading"
+            aria-label="Filtern nach Genre"
           />
           <Select
             v-model="state.searchPlatform"
@@ -505,6 +508,7 @@ fetchGames()
             class="md:w-56 ml-2"
             :loading="state.platformListLoading"
             :disabled="state.platformListLoading"
+            aria-label="Filtern nach Plattform"
           />
           <IconField class="ml-2">
             <InputIcon>
@@ -602,6 +606,7 @@ fetchGames()
           <FloatLabel variant="in">
             <Textarea
               v-model="createFormValues.description"
+              id="description"
               name="description"
               class="w-full"
               rows="5"
@@ -772,12 +777,13 @@ fetchGames()
           <FloatLabel variant="in">
             <Textarea
               v-model="editFormValues.description"
-              name="description"
+              id="editDescription"
+              name="editDescription"
               class="w-full"
               rows="5"
               style="resize: none"
             />
-            <label for="description">Beschreibung</label>
+            <label for="editDescription">Beschreibung</label>
           </FloatLabel>
         </div>
         <div class="field col-12 md:col-6">

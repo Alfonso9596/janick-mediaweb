@@ -34,19 +34,21 @@ const model = ref([
     label: 'Musik',
     items: [
       { label: 'Genres verwalten', vicon: 'fa-list', to: '/admin/music/genres', key: '4-0' }
-    ]
+    ],
+    key: '4'
   },
   {
     label: 'Rezepte',
     items: [
       { label: 'Mahlzeitarten verwalten', vicon: 'fa-list', to: '/admin/recipes/mealTypes', key: '5-0' }
-    ]
+    ],
+    key: '5'
   }
 ])
 </script>
 
 <template>
-  <template v-for="(item, i) in model" :key="item">
+  <template v-for="(item, i) in model" :key="item.key">
     <AppMenuItem :item="item" :index="i"></AppMenuItem>
   </template>
 </template>

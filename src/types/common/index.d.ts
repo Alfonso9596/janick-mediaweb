@@ -169,8 +169,4 @@ type MealTypeInput = {
   name: string
 }
 
-type ContextMenuInstance = InstanceType<typeof ContextMenu> & {
-  show: (event: Event) => void
-}
-
-export { MediaType, User, UserInput, Role, RoleInput, FileItem, Movie, Series, Game, Music, Recipe, MovieInput, SeriesInput, GameInput, MusicInput, RecipeInput, Genre, Platform, MealType, GenreInput, PlatformInput, MealTypeInput, ContextMenuInstance }
+export { MediaType, User, UserInput, Role, RoleInput, FileItem, Movie, Series, Game, Music, Recipe, MovieInput, SeriesInput, GameInput, MusicInput, RecipeInput, Genre, Platform, MealType, GenreInput, PlatformInput, MealTypeInput }

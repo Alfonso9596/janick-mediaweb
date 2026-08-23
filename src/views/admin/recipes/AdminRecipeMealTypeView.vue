@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { Column, ContextMenu, DataTable, FloatLabel, InputText, Message, type DataTableRowContextMenuEvent } from 'primevue'
 import { createMealType, deleteMealType, editMealType, getPageableMealTypes } from '@/api/networks/mealTypes.network'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
 import type { MealType } from '@/types/common'
 
 const toast = useToast()
-const cm = ref()
+const cm = ref<InstanceType<typeof ContextMenu> | null>(null)
 
 const state = reactive<{
   mealTypeList: MealType[]
@@ -76,7 +76,7 @@ const contextMenuModel = ref([
 
 const onRowContextMenu = (event: DataTableRowContextMenuEvent) => {
   state.selectedContextMealType = event.data
-  cm.value.show(event.originalEvent)
+  cm.value?.show(event.originalEvent)
 }
 
 const createMealTypeInitialValues = reactive<{
@@ -221,7 +221,9 @@ const fetchMealTypes = async () => {
   state.loading = false
 }
 
-fetchMealTypes()
+onMounted(() => {
+  fetchMealTypes()
+})
 </script>
 
 <template>

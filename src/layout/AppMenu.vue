@@ -54,7 +54,7 @@ const model = ref([
 </script>
 
 <template>
-  <template v-for="(item, i) in model" :key="item">
+  <template v-for="(item, i) in model" :key="item.key">
     <AppMenuItem :item="item" :index="i"></AppMenuItem>
   </template>
 </template>

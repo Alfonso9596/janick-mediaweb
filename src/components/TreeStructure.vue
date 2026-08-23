@@ -49,7 +49,7 @@ const state = reactive<{
   uploadFileSize: 0
 })
 
-const inputRef = ref()
+const inputRef = ref<HTMLInputElement | null>(null)
 
 watch(
   () => props.files,
@@ -166,7 +166,7 @@ const handleFileChange = (event: Event) => {
 
 function handleFileSelectClick(event: Event) {
   event.preventDefault()
-  inputRef.value.click()
+  inputRef.value?.click()
 }
 
 function handleCancelFileUpload() {
@@ -180,7 +180,7 @@ function handleCancelFileUpload() {
       <template #header>
         <div class="w-max">
           <div class="file-upload-header flex gap-2">
-            <input ref="inputRef" hidden type="file" @change="handleFileChange" />
+            <input aria-label="Neu" ref="inputRef" hidden type="file" @change="handleFileChange" />
             <Button v-if="state.mediaFile === null" class="mb-2" type="button" @click="handleFileSelectClick"><Plus/>Neu</Button>
             <Button v-if="state.mediaFile !== null" type="button" @click="handleFileUpload" severity="success"><CloudUpload />Hochladen</Button>
             <Button v-if="state.mediaFile !== null" type="button" @click="handleCancelFileUpload" severity="danger"><Times />Abbrechen</Button>

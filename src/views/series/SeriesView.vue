@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { getPageableSeries, createNewSeries, editSeries, deleteSeries } from '@/api/networks/series.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useSeriesStore } from '@/stores/series.store'
@@ -19,7 +19,7 @@ const seriesStore = useSeriesStore()
 const authStore = useAuthStore()
 const currentRoute = useRoute()
 const toast = useToast()
-const cm = ref()
+const cm = ref<InstanceType<typeof ContextMenu> | null>(null)
 
 const state = reactive<{
   seriesList: Series[]
@@ -203,7 +203,7 @@ const contextMenuModel = ref([
     icon: 'pi pi-pencil',
     disabled: () => {
       return (authStore.decodedToken?.sub !== state.selectedContextSeries?.user?.username) &&
-        (!authStore.roles?.includes('ADMIN'))
+        (!authStore.isUserAdmin())
     },
     command: () => {
       if (state.selectedContextSeries == null) return
@@ -219,7 +219,7 @@ const contextMenuModel = ref([
     color: '#c73c3c',
     disabled: () => {
       return (authStore.decodedToken?.sub !== state.selectedContextSeries?.user?.username) &&
-        (!authStore.roles?.includes('ADMIN'))
+        (!authStore.isUserAdmin())
     },
     command: () => {
       if (state.selectedContextSeries == null) return
@@ -230,7 +230,7 @@ const contextMenuModel = ref([
 
 const onRowContextMenu = (event: DataTableRowContextMenuEvent) => {
   state.selectedContextSeries = event.data
-  cm.value.show(event.originalEvent)
+  cm.value?.show(event.originalEvent)
 }
 
 const onRowClick = (event: DataTableRowClickEvent) => {
@@ -435,8 +435,10 @@ function onPosterRemove() {
   createFormValues.posterFile = null
 }
 
-fetchGenreList()
-fetchSeries()
+onMounted(() => {
+  fetchGenreList()
+  fetchSeries()
+})
 </script>
 
 <template>
@@ -493,6 +495,7 @@ fetchSeries()
             class="md:w-56 ml-2"
             :loading="state.genreListLoading"
             :disabled="state.genreListLoading"
+            aria-label="Filtern nach Genre"
           />
           <IconField class="ml-2">
             <InputIcon>
@@ -606,6 +609,7 @@ fetchSeries()
           <FloatLabel variant="in">
             <Textarea
               v-model="createFormValues.description"
+              id="description"
               name="description"
               class="w-full"
               rows="5"
@@ -793,12 +797,13 @@ fetchSeries()
           <FloatLabel variant="in">
             <Textarea
               v-model="editFormValues.description"
-              name="description"
+              id="editDescription"
+              name="editDescription"
               class="w-full"
               rows="5"
               style="resize: none"
             />
-            <label for="description">Beschreibung</label>
+            <label for="editDescription">Beschreibung</label>
           </FloatLabel>
         </div>
         <div class="field col-12 md:col-6">

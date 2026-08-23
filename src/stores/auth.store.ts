@@ -194,5 +194,6 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticatedAsync,
     hasRole,
     hasAnyRole,
+    isUserAdmin
   }
 })

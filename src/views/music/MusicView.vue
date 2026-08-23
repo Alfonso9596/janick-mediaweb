@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { getPageableMusic, createNewMusic, editMusic, deleteMusic } from '@/api/networks/music.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useMusicStore } from '@/stores/music.store'
@@ -19,7 +19,7 @@ const musicStore = useMusicStore()
 const authStore = useAuthStore()
 const currentRoute = useRoute()
 const toast = useToast()
-const cm = ref()
+const cm = ref<InstanceType<typeof ContextMenu> | null>(null)
 
 const state = reactive<{
   musicList: Music[]
@@ -198,7 +198,7 @@ const contextMenuModel = ref([
     icon: 'pi pi-pencil',
     disabled: () => {
       return (authStore.decodedToken?.sub !== state.selectedContextMusic?.user?.username) &&
-        (!authStore.roles?.includes('ADMIN'))
+        (!authStore.isUserAdmin())
     },
     command: () => {
       if (state.selectedContextMusic == null) return
@@ -214,7 +214,7 @@ const contextMenuModel = ref([
     color: '#c73c3c',
     disabled: () => {
       return (authStore.decodedToken?.sub !== state.selectedContextMusic?.user?.username) &&
-        (!authStore.roles?.includes('ADMIN'))
+        (!authStore.isUserAdmin())
     },
     command: () => {
       if (state.selectedContextMusic == null) return
@@ -225,7 +225,7 @@ const contextMenuModel = ref([
 
 const onRowContextMenu = (event: DataTableRowContextMenuEvent) => {
   state.selectedContextMusic = event.data
-  cm.value.show(event.originalEvent)
+  cm.value?.show(event.originalEvent)
 }
 
 const onRowClick = (event: DataTableRowClickEvent) => {
@@ -417,8 +417,10 @@ function onPosterRemove() {
   createFormValues.posterFile = null
 }
 
-fetchGenreList()
-fetchMusic()
+onMounted(() => {
+  fetchGenreList()
+  fetchMusic()
+})
 </script>
 
 <template>
@@ -470,6 +472,7 @@ fetchMusic()
             class="md:w-56 ml-2"
             :loading="state.genreListLoading"
             :disabled="state.genreListLoading"
+            aria-label="Filtern nach Genre"
           />
           <IconField class="ml-2">
             <InputIcon>
@@ -604,6 +607,7 @@ fetchMusic()
           <FloatLabel variant="in">
             <Textarea
               v-model="createFormValues.description"
+              id="description"
               name="description"
               class="w-full"
               rows="5"
@@ -771,12 +775,13 @@ fetchMusic()
           <FloatLabel variant="in">
             <Textarea
               v-model="editFormValues.description"
-              name="description"
+              id="editDescription"
+              name="editDescription"
               class="w-full"
               rows="5"
               style="resize: none"
             />
-            <label for="description">Beschreibung</label>
+            <label for="editDescription">Beschreibung</label>
           </FloatLabel>
         </div>
         <div class="field col-6">
