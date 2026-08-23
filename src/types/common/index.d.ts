@@ -1,4 +1,4 @@
-type MediaType = 'MOVIE' | 'SERIES' | 'GAME' | 'MUSIC'
+type MediaType = 'MOVIE' | 'SERIES' | 'GAME' | 'MUSIC' | 'RECIPE'
 
 type User = {
   id: number
@@ -27,7 +27,7 @@ type FileItem = {
   key?: string
   name: string
   size: number | string
-  fileType: 'FOLDER' | 'VIDEO' | 'ZIP' | string
+  fileType: 'FOLDER' | 'VIDEO' | 'ZIP' | 'TEXT' | string
   url?: string
   children?: FileItem[]
 }
@@ -85,6 +85,21 @@ type Music = {
   user?: User
 }
 
+type Recipe = {
+  id: number
+  name: string
+  posterFilepath?: string
+  description?: string
+  mealTypes?: string[]
+  vegetarian: boolean
+  vegan: boolean
+  glutenfree: boolean
+  lactosefree: boolean
+  ratingAmount: number
+  ratingValue: number
+  user?: User
+}
+
 type MovieInput = {
   name: string
   year: number
@@ -117,12 +132,27 @@ type MusicInput = {
   genres?: string[]
 }
 
+type RecipeInput = {
+  name: string
+  description?: string
+  mealTypes?: string[]
+  vegetarian: boolean
+  vegan: boolean
+  glutenfree: boolean
+  lactosefree: boolean
+}
+
 type Genre = {
   id: number
   name: string
 }
 
 type Platform = {
+  id: number
+  name: string
+}
+
+type MealType = {
   id: number
   name: string
 }
@@ -135,4 +165,12 @@ type PlatformInput = {
   name: string
 }
 
-export { MediaType, User, UserInput, Role, RoleInput, FileItem, Movie, Series, Game, Music, MovieInput, SeriesInput, GameInput, MusicInput, Genre, Platform, GenreInput, PlatformInput }
+type MealTypeInput = {
+  name: string
+}
+
+type ContextMenuInstance = InstanceType<typeof ContextMenu> & {
+  show: (event: Event) => void
+}
+
+export { MediaType, User, UserInput, Role, RoleInput, FileItem, Movie, Series, Game, Music, Recipe, MovieInput, SeriesInput, GameInput, MusicInput, RecipeInput, Genre, Platform, MealType, GenreInput, PlatformInput, MealTypeInput, ContextMenuInstance }

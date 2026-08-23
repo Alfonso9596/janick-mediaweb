@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { Column, ContextMenu, DataTable, FloatLabel, InputText, Message, type DataTableRowContextMenuEvent } from 'primevue'
-import { createMovieGenre, deleteMovieGenre, editMovieGenre, getPageableMovieGenres } from '@/api/networks/genres.network'
+import { createMealType, deleteMealType, editMealType, getPageableMealTypes } from '@/api/networks/mealTypes.network'
 import { computed, reactive, ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
-import type { Genre } from '@/types/common'
+import type { MealType } from '@/types/common'
 
 const toast = useToast()
 const cm = ref()
 
 const state = reactive<{
-  movieGenreList: Genre[]
+  mealTypeList: MealType[]
   totalRecords: number
   totalPages: number
   page: number
@@ -22,13 +22,13 @@ const state = reactive<{
   searchName: string
   createDialogVisible: boolean
   editDialogVisible: boolean
-  editDialogGenreId: number
+  editDialogMealTypeId: number
   deleteDialogVisible: boolean
-  deleteDialogGenreName: string
-  deleteDialogGenreId: number
-  selectedContextMovieGenre: Genre | null
+  deleteDialogMealTypeName: string
+  deleteDialogMealTypeId: number
+  selectedContextMealType: MealType | null
 }>({
-  movieGenreList: [],
+  mealTypeList: [],
   totalRecords: 0,
   totalPages: 0,
   page: 0,
@@ -39,11 +39,11 @@ const state = reactive<{
   searchName: '',
   createDialogVisible: false,
   editDialogVisible: false,
-  editDialogGenreId: 0,
+  editDialogMealTypeId: 0,
   deleteDialogVisible: false,
-  deleteDialogGenreName: '',
-  deleteDialogGenreId: 0,
-  selectedContextMovieGenre: null
+  deleteDialogMealTypeName: '',
+  deleteDialogMealTypeId: 0,
+  selectedContextMealType: null
 })
 
 const headers = computed(() => [
@@ -59,8 +59,8 @@ const contextMenuModel = ref([
     label: 'Bearbeiten',
     icon: 'pi pi-pencil',
     command: () => {
-      if (state.selectedContextMovieGenre == null) return
-      showEditMovieGenreDialog(state.selectedContextMovieGenre)
+      if (state.selectedContextMealType == null) return
+      showEditMealTypeDialog(state.selectedContextMealType)
     }
   },
   {
@@ -68,30 +68,30 @@ const contextMenuModel = ref([
     icon: 'pi pi-trash',
     color: '#c73c3c',
     command: () => {
-      if (state.selectedContextMovieGenre == null) return
-      showDeleteMovieGenreDialog(state.selectedContextMovieGenre)
+      if (state.selectedContextMealType == null) return
+      showDeleteMealTypeDialog(state.selectedContextMealType)
     }
   }
 ])
 
 const onRowContextMenu = (event: DataTableRowContextMenuEvent) => {
-  state.selectedContextMovieGenre = event.data
+  state.selectedContextMealType = event.data
   cm.value.show(event.originalEvent)
 }
 
-const createMovieGenreInitialValues = reactive<{
+const createMealTypeInitialValues = reactive<{
   name: string
 }>({
   name: ''
 })
 
-const createMovieGenreFormValues = reactive<{
+const createMealTypeFormValues = reactive<{
   name: string
 }>({
   name: ''
 })
 
-const editMovieGenreFormValues = reactive<{
+const editMealTypeFormValues = reactive<{
   name: string
 }>({
   name: ''
@@ -100,92 +100,92 @@ const editMovieGenreFormValues = reactive<{
 const resolver = ref(
   zodResolver(
     z.object({
-      name: z.string().min(3, 'Das Genre muss mindestends 3 Zeichen lang sein.')
+      name: z.string().min(3, 'Die Mahlzeitart muss mindestens 3 Zeichen lang sein.')
     })
   )
 )
 
-const onCreateMovieGenreFormSubmit = async (e: { valid: boolean }) => {
+const onCreateMealTypeFormSubmit = async (e: { valid: boolean }) => {
   if (e.valid) {
-    const createMovieGenreResponse = await createMovieGenre(createMovieGenreFormValues)
+    const createMealTypeResponse = await createMealType(createMealTypeFormValues)
 
-    if (!createMovieGenreResponse) {
+    if (!createMealTypeResponse) {
       toast.add({
         severity: 'error',
-        summary: 'Genre "' + createMovieGenreFormValues.name + '" existiert bereits',
+        summary: 'Mahlzeitart "' + createMealTypeFormValues.name + '" existiert bereits',
         life: 5000,
       })
       return
     }
     toast.add({
       severity: 'success',
-      summary: 'Genre "' + createMovieGenreFormValues.name + '" erfolgreich erstellt',
+      summary: 'Mahlzeitart "' + createMealTypeFormValues.name + '" erfolgreich erstellt',
       life: 3000
     })
     state.createDialogVisible = false
   }
-  fetchMovieGenres()
+  fetchMealTypes()
 }
 
-const onEditMovieGenreFormSubmit = async () => {
-  const editMovieGenreResponse = await editMovieGenre(state.editDialogGenreId, editMovieGenreFormValues)
+const onEditMealTypeFormSubmit = async () => {
+  const editMealTypeResponse = await editMealType(state.editDialogMealTypeId, editMealTypeFormValues)
 
-  if (editMovieGenreResponse === false) {
+  if (editMealTypeResponse === false) {
     toast.add({
       severity: 'error',
-      summary: 'Fehler beim Bearbeiten des Genres "' + editMovieGenreFormValues.name + '"',
+      summary: 'Fehler beim Bearbeiten der Mahlzeitart "' + editMealTypeFormValues.name + '"',
       life: 5000
     })
   } else {
     toast.add({
       severity: 'success',
-      summary: 'Genre "' + editMovieGenreFormValues.name + '" erfolgreich bearbeitet',
+      summary: 'Mahlzeitart "' + editMealTypeFormValues.name + '" erfolgreich bearbeitet',
       life: 3000
     })
   }
   state.editDialogVisible = false
-  fetchMovieGenres()
+  fetchMealTypes()
 }
 
-const onDeleteMovieGenreFormSubmit = async () => {
-  const deleteMovieGenreResponse = await deleteMovieGenre(state.deleteDialogGenreId)
+const onDeleteMealTypeFormSubmit = async () => {
+  const deleteMealTypeResponse = await deleteMealType(state.deleteDialogMealTypeId)
 
-  if (deleteMovieGenreResponse === false) {
+  if (deleteMealTypeResponse === false) {
     toast.add({
       severity: 'error',
-      summary: 'Fehler beim Löschen des Genres "' + state.deleteDialogGenreName + '"',
+      summary: 'Fehler beim Löschen der Mahlzeitart "' + state.deleteDialogMealTypeName + '"',
       life: 5000
     })
   } else {
     toast.add({
       severity: 'success',
-      summary: 'Genre "' + state.deleteDialogGenreName + '" erfolgreich gelöscht',
+      summary: 'Mahlzeitart "' + state.deleteDialogMealTypeName + '" erfolgreich gelöscht',
       life: 3000
     })
   }
   state.deleteDialogVisible = false
-  fetchMovieGenres()
+  fetchMealTypes()
 }
 
 const clearCreateDialogForm = () => {
-  createMovieGenreFormValues.name = ''
+  createMealTypeFormValues.name = ''
 }
 
-const showEditMovieGenreDialog = (genre: Genre) => {
-  state.editDialogGenreId = genre.id
-  editMovieGenreFormValues.name = genre.name
+const showEditMealTypeDialog = (mealType: MealType) => {
+  state.editDialogMealTypeId = mealType.id
+  editMealTypeFormValues.name = mealType.name
   state.editDialogVisible = true
 }
 
 const clearEditDialogForm = () => {
   state.editDialogVisible = false
 
-  editMovieGenreFormValues.name = ''
+  editMealTypeFormValues.name = ''
 }
 
-const showDeleteMovieGenreDialog = async (genre: Genre) => {
-  state.deleteDialogGenreName = genre.name
-  state.deleteDialogGenreId = genre.id
+const showDeleteMealTypeDialog = async (mealType: MealType) => {
+  state.deleteDialogMealTypeName = mealType.name
+  state.deleteDialogMealTypeId = mealType.id
   state.deleteDialogVisible = true
 }
 
@@ -198,11 +198,11 @@ watch(
     state.searchName
   ],
   () => {
-    fetchMovieGenres()
+    fetchMealTypes()
   }
 )
 
-const fetchMovieGenres = async () => {
+const fetchMealTypes = async () => {
   state.loading = true
 
   const params = {
@@ -213,21 +213,21 @@ const fetchMovieGenres = async () => {
     name: state.searchName ? state.searchName : ''
   }
 
-  const response = await getPageableMovieGenres(params)
-  state.movieGenreList = response.content
+  const response = await getPageableMealTypes(params)
+  state.mealTypeList = response.content
   state.totalRecords = response.totalElements
   state.totalPages = response.totalPages
 
   state.loading = false
 }
 
-fetchMovieGenres()
+fetchMealTypes()
 </script>
 
 <template>
   <div class="card">
-    <div class="font-semibold text-xl mb-4">Genreübersicht (Filme & Serien)</div>
-    <ContextMenu ref="cm" :model="contextMenuModel" @hide="state.selectedContextMovieGenre = null">
+    <div class="font-semibold text-xl mb-4">Mahlzeitartenübersicht (Rezepte)</div>
+    <ContextMenu ref="cm" :model="contextMenuModel" @hide="state.selectedContextMealType = null">
       <template #item="{ item, props }">
         <a class="flex items-center" v-bind="props.action" :style="{ 'background-color': item.color, 'border-radius': '2px' }">
           <span :class="item.icon" />
@@ -237,7 +237,7 @@ fetchMovieGenres()
     </ContextMenu>
     <DataTable
       lazy
-      :value="state.movieGenreList"
+      :value="state.mealTypeList"
       :paginator="true"
       :rows="state.pageSize"
       :rowsPerPageOptions="[10, 20, 50]"
@@ -250,7 +250,7 @@ fetchMovieGenres()
       :sortField="state.sortBy"
       :sortOrder="state.sortDir === 'asc' ? 1 : -1"
       contextMenu
-      :contextMenuSelection="state.selectedContextMovieGenre"
+      :contextMenuSelection="state.selectedContextMealType"
       @rowContextmenu="onRowContextMenu"
       @page="state.page = $event.page"
       @update:rows="state.pageSize = $event"
@@ -288,25 +288,25 @@ fetchMovieGenres()
       </Column>
     </DataTable>
 
-    <!-- CREATE MOVIE GENRE FORM DIALOG -->
+    <!-- CREATE MEAL TYPE FORM DIALOG -->
     <Dialog
       @afterHide="clearCreateDialogForm"
       v-model:visible="state.createDialogVisible"
       modal
-      header="Genre erstellen"
+      header="Mahlzeitart erstellen"
       :style="{ width: '32rem' }"
     >
       <Form
         v-slot="$createForm"
         :resolver="resolver"
-        :initialValues="createMovieGenreInitialValues"
-        @submit="onCreateMovieGenreFormSubmit"
+        :initialValues="createMealTypeInitialValues"
+        @submit="onCreateMealTypeFormSubmit"
         class="formgrid grid"
       >
         <div class="field col-12">
           <FloatLabel variant="in">
             <InputText
-              v-model="createMovieGenreFormValues.name"
+              v-model="createMealTypeFormValues.name"
               name="name"
               class="flex-auto"
               autocomplete="off"
@@ -327,24 +327,24 @@ fetchMovieGenres()
       </Form>
     </Dialog>
 
-    <!-- EDIT MOVIE GENRE FORM DIALOG -->
+    <!-- EDIT MEAL TYPE FORM DIALOG -->
     <Dialog
       @afterHide="clearEditDialogForm"
       v-model:visible="state.editDialogVisible"
       modal
-      header="Genre bearbeiten"
+      header="Mahlzeitart bearbeiten"
       :style="{ width: '32rem' }"
     >
       <Form
         v-slot="$editForm"
         :resolver="resolver"
-        @submit="onEditMovieGenreFormSubmit"
+        @submit="onEditMealTypeFormSubmit"
         class="formgrid grid"
       >
         <div class="field col-12">
           <FloatLabel variant="in">
             <InputText
-              v-model="editMovieGenreFormValues.name"
+              v-model="editMealTypeFormValues.name"
               name="name"
               class="flex-auto"
               autocomplete="off"
@@ -365,26 +365,26 @@ fetchMovieGenres()
       </Form>
     </Dialog>
 
-    <!-- DELETE MOVIE GENRE FORM DIALOG -->
+    <!-- DELETE MEAL TYPE FORM DIALOG -->
     <Dialog
       v-model:visible="state.deleteDialogVisible"
       modal
-      header="Genre löschen"
+      header="Mahlzeitart löschen"
       :closable="false"
       :style="{ width: '32rem' }"
     >
       <div class="flex flex-col gap-4">
-        <p>Möchten Sie das Genre "{{ state.deleteDialogGenreName }}" wirklich löschen?</p>
+        <p>Möchten Sie die Mahlzeitart "{{ state.deleteDialogMealTypeName }}" wirklich löschen?</p>
         <div class="flex justify-end gap-2">
           <Button
-            label="Abbrechen"
+            label="Abbrechne"
             severity="secondary"
             @click="state.deleteDialogVisible = false"
           />
           <Button
             label="Löschen"
             severity="danger"
-            @click="onDeleteMovieGenreFormSubmit"
+            @click="onDeleteMealTypeFormSubmit"
           />
         </div>
       </div>

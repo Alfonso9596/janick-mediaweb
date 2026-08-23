@@ -21,10 +21,6 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  fileUploadTitle: {
-    type: String,
-    default: ''
-  },
   mediaType: {
     type: String as PropType<MediaType>,
     default: ''

@@ -3,6 +3,7 @@ import MovieWidget from '@/layout/admin/panel/MovieWidget.vue'
 import SeriesWidget from '@/layout/admin/panel/SeriesWidget.vue'
 import GameWidget from '@/layout/admin/panel/GameWidget.vue'
 import MusicWidget from '@/layout/admin/panel/MusicWidget.vue'
+import RecipeWidget from '@/layout/admin/panel/RecipeWidget.vue'
 </script>
 
 <template>
@@ -14,6 +15,9 @@ import MusicWidget from '@/layout/admin/panel/MusicWidget.vue'
     <div class="col-span-12 lg:col-span-6 xl:col-span-3">
       <GameWidget />
       <MusicWidget />
+    </div>
+    <div class="col-span-12 lg:col-span-6 xl:col-span-3">
+      <RecipeWidget />
     </div>
   </div>
 </template>

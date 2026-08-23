@@ -24,7 +24,7 @@ const routes = [
       {
         path: '/movies/:id',
         name: 'movieDetails',
-        component: () => import('@/views/movies/MoviesDetailView.vue'),
+        component: () => import('@/views/movies/MoviesDetailsView.vue'),
         meta: { requiresAuth: true, roles: ['USER', 'ADMIN'] },
       },
       {
@@ -61,6 +61,18 @@ const routes = [
         path: '/music/:id',
         name: 'musicDetails',
         component: () => import('@/views/music/MusicDetailsView.vue'),
+        meta: { requiresAuth: true, roles: ['USER', 'ADMIN'] },
+      },
+      {
+        path: '/recipes',
+        name: 'Rezepte',
+        component: () => import('@/views/recipes/RecipesView.vue'),
+        meta: { requiresAuth: true, roles: ['USER', 'ADMIN'] },
+      },
+      {
+        path: '/recipes/:id',
+        name: 'recipesDetails',
+        component: () => import('@/views/recipes/RecipesDetailsView.vue'),
         meta: { requiresAuth: true, roles: ['USER', 'ADMIN'] },
       }
     ],
@@ -99,6 +111,11 @@ const routes = [
       {
         path: '/admin/music/genres',
         component: () => import('@/views/admin/music/AdminMusicGenreView.vue'),
+        meta: { requiresAuth: true, roles: ['ADMIN'] }
+      },
+      {
+        path: '/admin/recipes/mealTypes',
+        component: () => import('@/views/admin/recipes/AdminRecipeMealTypeView.vue'),
         meta: { requiresAuth: true, roles: ['ADMIN'] }
       }
     ],

@@ -118,7 +118,6 @@ onBeforeMount(() => {
         @file-upload="fileUpload"
         :files="state.files"
         :loading="state.loading"
-        :fileUploadTitle="`Datei für ${state.movie.name} hochladen`"
         :mediaId="state.movie.id"
         mediaType="MOVIE"
       />

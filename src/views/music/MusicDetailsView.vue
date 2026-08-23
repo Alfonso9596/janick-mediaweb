@@ -115,7 +115,6 @@ onBeforeMount(() => {
         @fileUpload="fileUpload"
         :files="state.files"
         :loading="state.loading"
-        :fileUploadTitle="`Datei für ${state.music.name} hochladen`"
         :mediaId="state.music.id"
         mediaType="MUSIC"
       />

@@ -35,6 +35,12 @@ const model = ref([
     items: [
       { label: 'Genres verwalten', vicon: 'fa-list', to: '/admin/music/genres', key: '4-0' }
     ]
+  },
+  {
+    label: 'Rezepte',
+    items: [
+      { label: 'Mahlzeitarten verwalten', vicon: 'fa-list', to: '/admin/recipes/mealTypes', key: '5-0' }
+    ]
   }
 ])
 </script>

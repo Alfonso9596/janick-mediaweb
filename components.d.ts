@@ -40,6 +40,7 @@ declare module 'vue' {
     Textarea: typeof import('primevue/textarea')['default']
     TextEditor: typeof import('./src/components/TextEditor.vue')['default']
     Toast: typeof import('primevue/toast')['default']
+    ToggleSwitch: typeof import('primevue/toggleswitch')['default']
     TreeStructure: typeof import('./src/components/TreeStructure.vue')['default']
   }
   export interface GlobalDirectives {

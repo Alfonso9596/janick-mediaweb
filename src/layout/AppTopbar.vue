@@ -59,6 +59,11 @@ const userMenuItems = ref([
         label: 'Musik',
         vicon: 'fa-music',
         command: () => router.push('/admin/music/genres')
+      },
+      {
+        label: 'Rezepte',
+        vicon: 'fa-utensils',
+        command: () => router.push('/admin/recipes/mealTypes')
       }
     ],
   },

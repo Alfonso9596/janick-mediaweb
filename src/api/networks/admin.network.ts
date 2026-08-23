@@ -12,7 +12,8 @@ const ADMIN_ENDPOINTS = {
   allMovies: '/admin/movies',
   allSeries: '/admin/series',
   allGames: '/admin/games',
-  allMusic: '/admin/music'
+  allMusic: '/admin/music',
+  allRecipes: '/admin/recipes'
 }
 
 const getPageableUsers = async (params?: Record<string, string | string[]>) => {
@@ -125,4 +126,14 @@ const getAllMusic = async () => {
   }
 }
 
-export { getPageableUsers, createUser, deleteUser, editUser, getAllRoles, getAllMovies, getAllSeries, getAllGames, getAllMusic }
+const getAllRecipes = async () => {
+  try {
+    const response = await http.get(ADMIN_ENDPOINTS.allRecipes)
+    return response?.data
+  } catch (e) {
+    console.error(e)
+    return false
+  }
+}
+
+export { getPageableUsers, createUser, deleteUser, editUser, getAllRoles, getAllMovies, getAllSeries, getAllGames, getAllMusic, getAllRecipes }
