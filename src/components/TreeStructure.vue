@@ -60,6 +60,49 @@ watch(
   }
 )
 
+const fileType = computed(() => [
+  {
+    key: 'FOLDER',
+    label: 'Ordner',
+    icon: 'pi pi-folder'
+  },
+  {
+    key: 'ZIP',
+    label: 'ZIP',
+    icon: 'pi pi-box'
+  },
+  {
+    key: 'VIDEO',
+    label: 'Video',
+    icon: 'pi pi-video'
+  },
+  {
+    key: 'AUDIO',
+    label: 'Audio',
+    icon: 'pi pi-headphones'
+  },
+  {
+    key: 'TEXT',
+    label: 'Text',
+    icon: 'pi pi-text'
+  },
+  {
+    key: 'PDF',
+    label: 'PDF',
+    icon: 'pi pi-file-pdf'
+  },
+  {
+    key: 'IMAGE',
+    label: 'Bild',
+    icon: 'pi pi-image'
+  },
+  {
+    key: 'UNKNOWN',
+    label: 'Unbekannt',
+    icon: 'pi pi-question'
+  }
+])
+
 const treeConfig = computed<TreeNode[]>(() => {
   const getTreeItem = (item: FileItem): TreeNode => ({
     data: item,
@@ -219,9 +262,7 @@ function handleCancelFileUpload() {
       <Column field="size" header="Größe" :showFilterMenu="false" />
       <Column field="fileType" header="Dateityp" :showFilterMenu="false">
         <template #body="{ node }">
-          <Chip v-if="node.data.fileType === 'FOLDER'" label="Ordner" icon="pi pi-folder" />
-          <Chip v-else-if="node.data.fileType === 'VIDEO'" label="Video" icon="pi pi-video" />
-          <Chip v-else label="ZIP" icon="pi pi-box" />
+          <Chip :label="fileType.find((f) => f.key === node.data.fileType)?.label" :icon="fileType.find((f) => f.key === node.data.fileType)?.icon" />
         </template>
       </Column>
       <Column class="w-24 text-end!">
