@@ -138,17 +138,17 @@ const router = createRouter({
   routes: routes,
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to) => {
   const { isAuthenticatedAsync, hasAnyRole } = useAuthStore()
   const { setPageLoading } = useLayout()
 
   setPageLoading(true)
   if (to.meta.requiresAuth && !isAuthenticatedAsync) {
-    next({ name: 'Home' })
-  } else if (to.meta.roles && !hasAnyRole(to.meta.roles as string[])) {
-    next({ name: 'Unauthorized' })
-  } else {
-    next()
+    return { name: 'Home' }
+  }
+
+  if (to.meta.roles && !hasAnyRole(to.meta.roles as string[])) {
+    return { name: 'Unauthorized' }
   }
 })
 
