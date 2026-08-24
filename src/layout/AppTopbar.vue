@@ -4,10 +4,11 @@ import { useConfiguratorStore } from '@/stores/configurator.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { useLayout } from '@/layout/composables/layout'
 import { useRouter } from 'vue-router'
-import { Dialog, Message, useToast, Popover } from 'primevue'
+import { Dialog, Message, useToast, Popover, InputPassword, InputIcon } from 'primevue'
 import AppConfigurator from './AppConfigurator.vue'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
+import { Eye, EyeSlash } from '@primeicons/vue'
 
 const configuratorStore = useConfiguratorStore()
 const authStore = useAuthStore()
@@ -18,6 +19,9 @@ const userDialog = ref<InstanceType<typeof Popover> | null>(null)
 const loginDialog = ref(false)
 const isUserLoggedIn = ref(false)
 const changePasswordDialog = ref(false)
+const loginPasswordMask = ref(true)
+const changeCurrentPasswordMask = ref(true)
+const changeNewPasswordMask = ref(true)
 
 const props = defineProps({
   isAdminPanel: {
@@ -178,11 +182,14 @@ const onChangePasswordFormSubmit = async () => {
 const clearLoginForm = () => {
   loginFormValues.username = defaultLoginFormValues.username
   loginFormValues.password = defaultLoginFormValues.password
+  loginPasswordMask.value = true
 }
 
 const clearChangePasswordForm = () => {
   changePasswordFormValues.currentPassword = defaultChangePasswordFormValues.currentPassword
   changePasswordFormValues.newPassword = defaultChangePasswordFormValues.newPassword
+  changeCurrentPasswordMask.value = true
+  changeNewPasswordMask.value = true
 }
 
 const onLogout = async () => {
@@ -267,7 +274,7 @@ function onDarkThemeChange() {
           </g>
         </svg>
 
-        <span>Janick's MediaDB{{ props.isAdminPanel ? ' (ADMIN)' : ''}}</span>
+        <span>Janick's MediaDB{{ props.isAdminPanel ? ' Admin Panel' : ''}}</span>
       </router-link>
     </div>
 
@@ -385,41 +392,41 @@ function onDarkThemeChange() {
             @submit="onLoginFormSubmit"
           >
             <div class="inline-flex flex-col gap-2 mb-4">
-              <FloatLabel variant="in">
-                <InputText
-                  v-model="loginFormValues.username"
-                  name="username"
-                  class="flex-auto"
-                  autocomplete="off"
-                  autofocus
-                />
-                <Message
-                  v-if="$registerForm.username?.invalid"
-                  severity="error"
-                  size="small"
-                  variant="simple"
-                  >{{ $registerForm.username.error?.message }}</Message
-                >
-                <label for="username">Benutzername</label>
-              </FloatLabel>
+              <InputText
+                v-model="loginFormValues.username"
+                placeholder="Benutzername"
+                class="flex-auto"
+                autocomplete="off"
+                autofocus
+              />
+              <Message
+                v-if="$registerForm.username?.invalid"
+                severity="error"
+                size="small"
+                variant="simple"
+                >{{ $registerForm.username.error?.message }}</Message
+              >
             </div>
             <div class="inline-flex flex-col gap-2 mb-4">
-              <FloatLabel variant="in">
-                <Password
+              <IconField>
+                <InputPassword
                   v-model="loginFormValues.password"
-                  name="password"
+                  :mask="loginPasswordMask"
+                  placeholder="Passwort"
                   class="flex-auto"
-                  :feedback="false"
                 />
-                <Message
-                  v-if="$registerForm.password?.invalid"
-                  severity="error"
-                  size="small"
-                  variant="simple"
-                  >{{ $registerForm.password.error?.message }}</Message
-                >
-                <label for="password">Passwort</label>
-              </FloatLabel>
+                <InputIcon class="cursor-pointer" @click="loginPasswordMask = !loginPasswordMask">
+                  <Eye v-if="loginPasswordMask" />
+                  <EyeSlash v-else />
+                </InputIcon>
+              </IconField>
+              <Message
+                v-if="$registerForm.password?.invalid"
+                severity="error"
+                size="small"
+                variant="simple"
+                >{{ $registerForm.password.error?.message }}</Message
+              >
             </div>
             <div class="inline-flex flex-col gap-4">
               <Button type="submit" severity="success" label="Login" />
@@ -451,32 +458,49 @@ function onDarkThemeChange() {
       >
         <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-1.5">
-            <FloatLabel variant="in">
-              <Password v-model="changePasswordFormValues.currentPassword" name="currentPassword" autofocus />
-              <Message
-                v-if="$changePasswordForm.currentPassword?.invalid"
-                severity="error"
-                size="small"
-                variant="simple"
-              >
-                {{ $changePasswordForm.currentPassword.error?.message }}
-              </Message>
-              <label for="currentPassword">Altes Passwort</label>
-            </FloatLabel>
+            <IconField>
+              <InputPassword
+                v-model="changePasswordFormValues.currentPassword"
+                :mask="changeCurrentPasswordMask"
+                placeholder="Altes Passwort"
+                class="flex-auto"
+                autofocus
+              />
+              <InputIcon class="cursor-pointer" @click="changeCurrentPasswordMask = !changeCurrentPasswordMask">
+                <Eye v-if="changeCurrentPasswordMask" />
+                <EyeSlash v-else />
+              </InputIcon>
+            </IconField>
+            <Message
+              v-if="$changePasswordForm.currentPassword?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+            >
+              {{ $changePasswordForm.currentPassword.error?.message }}
+            </Message>
           </div>
           <div class="flex flex-col gap-1.5">
-            <FloatLabel variant="in">
-              <Password v-model="changePasswordFormValues.newPassword" name="newPassword" />
-              <Message
-                v-if="$changePasswordForm.newPassword?.invalid"
-                severity="error"
-                size="small"
-                variant="simple"
-              >
-                {{ $changePasswordForm.newPassword.error?.message }}
-              </Message>
-              <label for="newPassword">Neues Password</label>
-            </FloatLabel>
+            <IconField>
+              <InputPassword
+                v-model="changePasswordFormValues.newPassword"
+                :mask="changeNewPasswordMask"
+                placeholder="Neues Passwort"
+                class="flex-auto"
+              />
+              <InputIcon class="cursor-pointer" @click="changeNewPasswordMask = !changeNewPasswordMask">
+                <Eye v-if="changeNewPasswordMask" />
+                <EyeSlash v-else />
+              </InputIcon>
+            </IconField>
+            <Message
+              v-if="$changePasswordForm.newPassword?.invalid"
+              severity="error"
+              size="small"
+              variant="simple"
+            >
+              {{ $changePasswordForm.newPassword.error?.message }}
+            </Message>
           </div>
           <div class="inline-flex flex-row gap-4">
             <Button severity="secondary" @click="changePasswordDialog = false">Abbrechen</Button>

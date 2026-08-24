@@ -578,7 +578,7 @@ function setupConfiguratorFromStorage() {
   >
     <div class="flex flex-col gap-4">
       <div>
-        <span class="text-sm text-muted-color font-semibold">Primary</span>
+        <span class="text-sm text-muted-color font-semibold">Primärfarbe</span>
         <div class="pt-2 flex gap-2 flex-wrap justify-between">
           <button
             v-for="primaryColor of primaryColors"
@@ -597,7 +597,7 @@ function setupConfiguratorFromStorage() {
         </div>
       </div>
       <div>
-        <span class="text-sm text-muted-color font-semibold">Surface</span>
+        <span class="text-sm text-muted-color font-semibold">Hintergrundfarbe</span>
         <div class="pt-2 flex gap-2 flex-wrap justify-between">
           <button
             v-for="surface of surfaces"
@@ -620,7 +620,7 @@ function setupConfiguratorFromStorage() {
         </div>
       </div>
       <div class="flex flex-col gap-2">
-        <span class="text-sm text-muted-color font-semibold">Presets</span>
+        <span class="text-sm text-muted-color font-semibold">Artstyle</span>
         <SelectButton
           v-model="preset"
           @change="onPresetChange"
