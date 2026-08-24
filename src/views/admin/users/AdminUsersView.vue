@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import {
+  Checkbox,
   Chip,
   Column,
   ContextMenu,
   DataTable,
-  FloatLabel,
   IconField,
   InputIcon,
+  InputPassword,
   InputText,
+  Label,
   Message,
-  MultiSelect,
   type DataTableRowContextMenuEvent
 } from 'primevue'
 import { getAllRoles, getPageableUsers, createUser, deleteUser, editUser } from '@/api/networks/admin.network'
@@ -19,10 +20,14 @@ import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import type { User, Role } from '@/types/common'
+import { Eye, EyeSlash } from '@primeicons/vue'
+import MultiSelect from '@/components/MultiSelect.vue'
 
 const toast = useToast()
 const authStore = useAuthStore()
 const cm = ref<InstanceType<typeof ContextMenu> | null>(null)
+const createPasswordMask = ref(true)
+const editPasswordMask = ref(true)
 
 const state = reactive<{
   userList: User[]
@@ -244,6 +249,7 @@ const clearCreateDialogForm = () => {
   createUserFormValues.password = ''
   createUserFormValues.roles = []
   createUserFormValues.isEnabled = true
+  createPasswordMask.value = true
 }
 
 const showEditUserDialog = (user: User) => {
@@ -264,6 +270,7 @@ const clearEditDialogForm = () => {
   editUserFormValues.roles = []
   editUserFormValues.editPassword = false
   editUserFormValues.isEnabled = false
+  editPasswordMask.value = true
 }
 
 const showDeleteUserDialog = async (user: User) => {
@@ -422,70 +429,71 @@ onMounted(() => {
         class="formgrid grid"
       >
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <InputText
               v-model="createUserFormValues.username"
               name="username"
-              class="flex-auto"
+              placeholder="Benutzername"
               autocomplete="off"
               autofocus
+              fluid
             />
-            <Message
-              v-if="$createForm.username?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-              >{{ $createForm.username.error?.message }}</Message
-            >
             <label for="username">Benutzername</label>
-          </FloatLabel>
+          </IftaLabel>
+          <Message
+            v-if="$createForm.username?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+            >{{ $createForm.username.error?.message }}</Message
+          >
         </div>
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <MultiSelect
-              v-model="createUserFormValues.roles"
-              name="roles"
-              fluid
-              :options="state.roleList"
+              :items="state.roleList"
               optionLabel="name"
               optionValue="name"
-              filter
               placeholder="Rolle auswählen"
-              :maxSelectedLabels="2"
-              selectedItemsLabel="{0} Rolles ausgewählt"
-              :loading="state.roleListLoading"
-              :disabled="state.roleListLoading"
+              name="roles"
+              @update:modelValue="(e) => createUserFormValues.roles = e"
             />
             <label for="roles">Rollen</label>
-          </FloatLabel>
+          </IftaLabel>
         </div>
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
-            <InputText
-              v-model="createUserFormValues.password"
-              name="password"
-              class="flex-auto"
-              autocomplete="new-password"
-              type="password"
-            />
-            <Message
-              v-if="$createForm.password?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-              >{{ $createForm.password.error?.message }}</Message
-            >
-            <label for="password">Passwort</label>
-          </FloatLabel>
+          <IconField>
+            <IftaLabel>
+              <InputPassword
+                v-model="createUserFormValues.password"
+                :mask="createPasswordMask"
+                name="password"
+                placeholder="Passwort"
+                fluid
+              />
+              <label for="password">Passwort</label>
+            </IftaLabel>
+            <InputIcon class="cursor-pointer" @click="createPasswordMask = !createPasswordMask">
+              <Eye v-if="createPasswordMask" />
+              <EyeSlash v-else />
+            </InputIcon>
+          </IconField>
+          <Message
+            v-if="$createForm.password?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+            >{{ $createForm.password.error?.message }}</Message
+          >
         </div>
         <div class="field col-12 md:col-6">
-          <div class="flex items-center gap-2 mt-3">
+          <div class="flex gap-1 pt-2">
             <Checkbox
               v-model="createUserFormValues.isEnabled"
               name="isEnabled"
               :binary="true"
             />
-            <label for="isEnabled" class="ml-2">Benutzer aktivieren</label>
+            <Label for="isEnabled" class="ml-2">Benutzer aktivieren</Label>
           </div>
         </div>
         <div class="field col-6">
@@ -509,81 +517,83 @@ onMounted(() => {
         class="formgrid grid"
       >
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <InputText
               v-model="editUserFormValues.username"
               name="username"
-              class="flex-auto"
+              placeholder="Benutzername"
               autocomplete="off"
               autofocus
+              fluid
             />
-            <Message
-              v-if="$editUserForm.username?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-              >{{ $editUserForm.username.error?.message }}</Message
-            >
             <label for="username">Benutzername</label>
-          </FloatLabel>
+          </IftaLabel>
+          <Message
+            v-if="$editUserForm.username?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+            >{{ $editUserForm.username.error?.message }}</Message
+          >
         </div>
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <MultiSelect
-              v-model="editUserFormValues.roles"
-              name="roles"
-              fluid
-              :options="state.roleList"
+              :initialValue="editUserFormValues.roles"
+              :items="state.roleList"
               optionLabel="name"
               optionValue="name"
-              filter
               placeholder="Rolle auswählen"
-              :maxSelectedLabels="2"
-              selectedItemsLabel="{0} Rolles ausgewählt"
-              :loading="state.roleListLoading"
-              :disabled="state.roleListLoading"
+              name="roles"
+              @update:modelValue="(e) => editUserFormValues.roles = e"
             />
             <label for="roles">Rollen</label>
-          </FloatLabel>
+          </IftaLabel>
         </div>
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
-            <InputText
-              v-model="editUserFormValues.password"
-              name="password"
-              class="flex-auto"
-              autocomplete="new-password"
-              type="password"
-              :disabled="!editUserFormValues.editPassword"
-            />
-            <Message
-              v-if="$editUserForm.password?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-              >{{ $editUserForm.password.error?.message }}</Message
-            >
-            <label for="password">Passwort</label>
-          </FloatLabel>
+          <IconField>
+            <IftaLabel>
+              <InputPassword
+                v-model="editUserFormValues.password"
+                :mask="editPasswordMask"
+                name="password"
+                placeholder="Passwort"
+                fluid
+                :disabled="!editUserFormValues.editPassword"
+              />
+              <label for="password">Passwort</label>
+            </IftaLabel>
+            <InputIcon class="cursor-pointer" @click="editPasswordMask = !editPasswordMask">
+              <Eye v-if="editPasswordMask" />
+              <EyeSlash v-else />
+            </InputIcon>
+          </IconField>
+          <Message
+            v-if="$editUserForm.password?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+            >{{ $editUserForm.password.error?.message }}</Message
+          >
         </div>
         <div class="field col-12 md:col-6">
-          <div class="flex items-center gap-2 mt-3">
+          <div class="flex gap-1 pt-2">
             <Checkbox
               v-model="editUserFormValues.editPassword"
               name="editPassword"
               :binary="true"
             />
-            <label for="editPassword" class="ml-2">Passwort ändern</label>
+            <Label for="editPassword" class="ml-2">Passwort ändern</Label>
           </div>
         </div>
         <div class="field col-12 md:col-6">
-          <div class="flex items-center gap-2 mt-3">
+          <div class="flex gap-1 pt-2">
             <Checkbox
               v-model="editUserFormValues.isEnabled"
               name="isEnabled"
               :binary="true"
             />
-            <label for="isEnabled" class="ml-2">Benutzer aktivieren</label>
+            <Label for="isEnabled" class="ml-2">Benutzer aktivieren</Label>
           </div>
         </div>
         <div class="field col-12">
@@ -602,7 +612,7 @@ onMounted(() => {
     >
       <div class="flex flex-col gap-4">
         <p>Möchten Sie den Benutzer "{{ state.deleteDialogUsername }}" wirklich löschen?</p>
-        <div class="flex justify-end gap-2">
+        <div class="flex justify-start gap-2">
           <Button
             label="Abbrechen"
             severity="secondary"

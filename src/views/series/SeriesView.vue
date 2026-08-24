@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { getPageableSeries, createNewSeries, editSeries, deleteSeries } from '@/api/networks/series.network'
 import { uploadNewPoster } from '@/api/networks/files.network'
 import { useSeriesStore } from '@/stores/series.store'
-import { Column, ContextMenu, DataTable, FileUpload, type DataTableRowClickEvent, type DataTableRowContextMenuEvent, type FileUploadSelectEvent } from 'primevue'
+import { Column, ContextMenu, DataTable, FileUpload, IftaLabel, type DataTableRowClickEvent, type DataTableRowContextMenuEvent, type FileUploadSelectEvent } from 'primevue'
 import { useRoute } from 'vue-router'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
@@ -13,6 +13,7 @@ import router from '@/router'
 import type { Series, Genre } from '@/types/common'
 import { getAllMovieGenres } from '@/api/networks/genres.network'
 import { Times } from '@primeicons/vue'
+import MultiSelect from '@/components/MultiSelect.vue'
 
 const apiUrl = import.meta.env.VITE_API_URL
 const seriesStore = useSeriesStore()
@@ -73,8 +74,8 @@ const defaultFormValues = reactive<{
 }>({
   name: '',
   description: '',
-  yearStart: 0,
-  yearEnd: 0,
+  yearStart: 2026,
+  yearEnd: 2026,
   episodeLength: 0,
   genres: [],
 })
@@ -90,8 +91,8 @@ const createFormValues = reactive<{
 }>({
   name: '',
   description: '',
-  yearStart: 0,
-  yearEnd: 0,
+  yearStart: 2026,
+  yearEnd: 2026,
   episodeLength: 0,
   genres: [],
   posterFile: null,
@@ -276,7 +277,7 @@ const goToSeriesPage = (id: number) => {
 const resolver = ref(
   zodResolver(
     z.object({
-      name: z.string().min(1, { message: 'Der name wird benötigt.' }),
+      name: z.string().min(1, { message: 'Der Name wird benötigt.' }),
       yearStart: z.union([
         z
           .number()
@@ -551,110 +552,110 @@ onMounted(() => {
         class="formgrid grid"
       >
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <InputText
               v-model="createFormValues.name"
               name="name"
-              class="flex-auto w-full"
+              placeholder="Name"
               autocomplete="off"
               autofocus
+              fluid
             />
-            <Message
-              v-if="$createForm.name?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-              >{{ $createForm.name.error?.message }}</Message
-            >
             <label for="name">Name</label>
-          </FloatLabel>
+          </IftaLabel>
+          <Message
+            v-if="$createForm.name?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+            >{{ $createForm.name.error?.message }}</Message
+          >
         </div>
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <InputNumber
               v-model="createFormValues.yearStart"
               name="yearStart"
-              class="flex-auto w-full"
+              placeholder="Erscheinungsjahr"
               :useGrouping="false"
+              fluid
             />
-            <Message
-              v-if="$createForm.yearStart?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-              >{{ $createForm.yearStart.error?.message }}</Message
-            >
             <label for="yearStart">Erscheinungsjahr</label>
-          </FloatLabel>
+          </IftaLabel>
+          <Message
+            v-if="$createForm.yearStart?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+            >{{ $createForm.yearStart.error?.message }}</Message
+          >
         </div>
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <InputNumber
               v-model="createFormValues.yearEnd"
               name="yearEnd"
-              class="flex-auto w-full"
+              placeholder="Endjahr"
               :useGrouping="false"
+              fluid
             />
-            <Message
-              v-if="$createForm.yearEnd?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-              >{{ $createForm.yearEnd.error?.message }}</Message
-            >
             <label for="yearEnd">Endjahr</label>
-          </FloatLabel>
+          </IftaLabel>
+          <Message
+            v-if="$createForm.yearEnd?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+            >{{ $createForm.yearEnd.error?.message }}</Message
+          >
         </div>
         <div class="field col-12">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <Textarea
               v-model="createFormValues.description"
-              id="description"
+              aria-label="Beschreibung"
+              placeholder="Beschreibung"
               name="description"
-              class="w-full"
+              fluid
               rows="5"
               style="resize: none"
             />
             <label for="description">Beschreibung</label>
-          </FloatLabel>
+          </IftaLabel>
         </div>
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <InputNumber
               v-model="createFormValues.episodeLength"
               name="episodeLength"
-              class="w-full"
+              placeholder="Länge (Min.)"
               :useGrouping="false"
+              fluid
             />
-            <Message
-              v-if="$createForm.episodeLength?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-              >{{ $createForm.episodeLength.error?.message }}</Message
-            >
-            <label for="length">Länge (Min.)</label>
-          </FloatLabel>
+            <label for="episodeLength">Länge (Min.)</label>
+          </IftaLabel>
+          <Message
+            v-if="$createForm.episodeLength?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+            >{{ $createForm.episodeLength.error?.message }}</Message
+          >
         </div>
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <MultiSelect
-              v-model="createFormValues.genres"
-              name="genres"
-              fluid
-              display="chip"
-              :options="state.genreList"
+              :items="state.genreList"
               optionLabel="name"
               optionValue="name"
-              filter
+              name="genres"
               placeholder="Genre auswählen"
-              :maxSelectedLabels="2"
-              selectedItemsLabel="{0} Genres ausgewählt"
+              @update:modelValue="(e) => createFormValues.genres = e"
               :loading="state.genreListLoading"
               :disabled="state.genreListLoading"
             />
             <label for="genres">Genres</label>
-          </FloatLabel>
+          </IftaLabel>
         </div>
         <div class="field col-12">
           <FileUpload
@@ -739,110 +740,111 @@ onMounted(() => {
         class="formgrid grid"
       >
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <InputText
               v-model="editFormValues.name"
               name="name"
-              class="flex-auto w-full"
+              placeholder="Name"
               autocomplete="off"
               autofocus
+              fluid
             />
-            <Message
-              v-if="$editForm.name?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-              >{{ $editForm.name.error?.message }}</Message
-            >
             <label for="name">Name</label>
-          </FloatLabel>
+          </IftaLabel>
+          <Message
+            v-if="$editForm.name?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+            >{{ $editForm.name.error?.message }}</Message
+          >
         </div>
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <InputNumber
               v-model="editFormValues.yearStart"
               name="yearStart"
-              class="flex-auto w-full"
+              placeholder="Erscheinungsjahr"
               :useGrouping="false"
+              fluid
             />
-            <Message
-              v-if="$editForm.yearStart?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-              >{{ $editForm.yearStart.error?.message }}</Message
-            >
             <label for="yearStart">Erscheinungsjahr</label>
-          </FloatLabel>
+          </IftaLabel>
+          <Message
+            v-if="$editForm.yearStart?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+            >{{ $editForm.yearStart.error?.message }}</Message
+          >
         </div>
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <InputNumber
               v-model="editFormValues.yearEnd"
               name="yearEnd"
-              class="flex-auto w-full"
+              placeholder="Endjahr"
               :useGrouping="false"
+              fluid
             />
-            <Message
-              v-if="$editForm.yearEnd?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-              >{{ $editForm.yearEnd.error?.message }}</Message
-            >
             <label for="yearEnd">Endjahr</label>
-          </FloatLabel>
+          </IftaLabel>
+          <Message
+            v-if="$editForm.yearEnd?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+            >{{ $editForm.yearEnd.error?.message }}</Message
+          >
         </div>
         <div class="field col-12">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <Textarea
               v-model="editFormValues.description"
-              id="editDescription"
-              name="editDescription"
-              class="w-full"
+              aria-label="Beschreibung"
+              placeholder="Beschreibung"
+              name="description"
+              fluid
               rows="5"
               style="resize: none"
             />
-            <label for="editDescription">Beschreibung</label>
-          </FloatLabel>
+            <label for="description">Beschreibung</label>
+          </IftaLabel>
         </div>
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <InputNumber
               v-model="editFormValues.episodeLength"
               name="episodeLength"
-              class="w-full"
+              placeholder="Länge (Min.)"
               :useGrouping="false"
+              fluid
             />
-            <Message
-              v-if="$editForm.episodeLength?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-              >{{ $editForm.length.error?.message }}</Message
-            >
-            <label for="length">Länge (Min.)</label>
-          </FloatLabel>
+            <label for="episodeLength">Länge (Min.)</label>
+          </IftaLabel>
+          <Message
+            v-if="$editForm.episodeLength?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+            >{{ $editForm.length.error?.message }}</Message
+          >
         </div>
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <MultiSelect
-              v-model="editFormValues.genres"
-              name="genres"
-              fluid
-              display="chip"
-              :options="state.genreList"
+              :initialValue="editFormValues.genres"
+              :items="state.genreList"
               optionLabel="name"
               optionValue="name"
-              filter
+              name="genres"
               placeholder="Genre auswählen"
-              :maxSelectedLabels="2"
-              selectedItemsLabel="{0} Genres ausgewählt"
+              @update:modelValue="(e) => editFormValues.genres = e"
               :loading="state.genreListLoading"
               :disabled="state.genreListLoading"
             />
             <label for="genres">Genres</label>
-          </FloatLabel>
+          </IftaLabel>
         </div>
         <div class="field col-6">
           <Button type="submit" severity="success" label="Bestätigen" />
@@ -860,7 +862,7 @@ onMounted(() => {
     >
       <div class="flex flex-col gap-4">
         <p>Möchten Sie die Serie "{{ state.deleteDialogSeriesName }}" wirklich löschen?</p>
-        <div class="flex justify-end gap-2">
+        <div class="flex justify-start gap-2">
           <Button
             label="Abbrechen"
             severity="secondary"

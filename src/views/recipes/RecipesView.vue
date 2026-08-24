@@ -13,6 +13,7 @@ import type { MealType, Recipe } from '@/types/common'
 import { useAuthStore } from '@/stores/auth.store'
 import { getAllMealTypes } from '@/api/networks/mealTypes.network'
 import { Check, Times } from '@primeicons/vue'
+import MultiSelect from '@/components/MultiSelect.vue'
 
 const apiUrl = import.meta.env.VITE_API_URL
 const recipeStore = useRecipeStore()
@@ -555,55 +556,53 @@ onMounted(() => {
         class="formgrid grid"
       >
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <InputText
               v-model="createFormValues.name"
               name="name"
-              class="flex-auto w-full"
+              placeholder="Name"
               autocomplete="off"
               autofocus
+              fluid
             />
-            <Message
-              v-if="$createForm.name?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-            >{{ $createForm.name.error?.message }}</Message>
             <label for="name">Name</label>
-          </FloatLabel>
+          </IftaLabel>
+          <Message
+            v-if="$createForm.name?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+            >{{ $createForm.name.error?.message }}</Message
+          >
         </div>
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <MultiSelect
-              v-model="createFormValues.mealTypes"
-              name="mealTypes"
-              fluid
-              display="chip"
-              :options="state.mealTypeList"
+              :items="state.mealTypeList"
               optionLabel="name"
               optionValue="name"
-              filter
+              name="mealTypes"
               placeholder="Mahlzeitart auswählen"
-              :maxSelectedLabels="2"
-              selectedItemsLabel="{0} Mahlzeitarten ausgewählt"
+              @update:modelValue="(e) => createFormValues.mealTypes = e"
               :loading="state.mealTypeListLoading"
               :disabled="state.mealTypeListLoading"
             />
             <label for="mealTypes">Mahlzeitarten</label>
-          </FloatLabel>
+          </IftaLabel>
         </div>
         <div class="field col-12">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <Textarea
               v-model="createFormValues.description"
-              id="description"
+              aria-label="Beschreibung"
+              placeholder="Beschreibung"
               name="description"
-              class="w-full"
+              fluid
               rows="5"
               style="resize: none"
             />
             <label for="description">Beschreibung</label>
-          </FloatLabel>
+          </IftaLabel>
         </div>
         <div class="flex justify-start gap-2 field col-12 md:col-6">
           <ToggleSwitch
@@ -716,55 +715,54 @@ onMounted(() => {
         class="formgrid grid"
       >
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <InputText
               v-model="editFormValues.name"
               name="name"
-              class="flex-auto w-full"
+              placeholder="Name"
               autocomplete="off"
               autofocus
+              fluid
             />
             <Message
               v-if="$editForm.name?.invalid"
               severity="error"
               size="small"
               variant="simple"
-            >{{ $editForm.name.error?.message }}</Message>
+              >{{ $editForm.name.error?.message }}</Message
+            >
             <label for="name">Name</label>
-          </FloatLabel>
+          </IftaLabel>
         </div>
         <div class="field col-12 md:col-6">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <MultiSelect
-              v-model="editFormValues.mealTypes"
-              name="mealTypes"
-              fluid
-              display="chip"
-              :options="state.mealTypeList"
+              :initialValue="editFormValues.mealTypes"
+              :items="state.mealTypeList"
               optionLabel="name"
               optionValue="name"
-              filter
+              name="mealTypes"
               placeholder="Mahlzeitart auswählen"
-              :maxSelectedLabels="2"
-              selectedItemsLabel="{0} Mahlzeitarten ausgewählt"
+              @update:modelValue="(e) => editFormValues.mealTypes = e"
               :loading="state.mealTypeListLoading"
               :disabled="state.mealTypeListLoading"
             />
             <label for="mealTypes">Mahlzeitarten</label>
-          </FloatLabel>
+          </IftaLabel>
         </div>
         <div class="field col-12">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <Textarea
               v-model="editFormValues.description"
-              id="editDescription"
-              name="editDescription"
-              class="w-full"
+              aria-label="Beschreibung"
+              placeholder="Beschreibung"
+              name="description"
+              fluid
               rows="5"
               style="resize: none"
             />
-            <label for="editDescription">Beschreibung</label>
-          </FloatLabel>
+            <label for="description">Beschreibung</label>
+          </IftaLabel>
         </div>
         <div class="flex justify-start gap-2 field col-12 md:col-6">
           <ToggleSwitch
@@ -810,7 +808,7 @@ onMounted(() => {
     >
       <div class="flex flex-col gap-4">
         <p>Möchten Sie das Rezept "{{ state.deleteDialogRecipeName }}" wirklich löschen?</p>
-        <div class="flex justify-end gap-2">
+        <div class="flex justify-start gap-2">
           <Button
             label="Abbrechen"
             severity="secondary"

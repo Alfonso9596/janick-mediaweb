@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Column, ContextMenu, DataTable, FloatLabel, InputText, Message, type DataTableRowContextMenuEvent } from 'primevue'
+import { Column, ContextMenu, DataTable, InputText, Message, type DataTableRowContextMenuEvent } from 'primevue'
 import { createGameGenre, deleteGameGenre, editGameGenre, getPageableGameGenres } from '@/api/networks/genres.network'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
@@ -306,22 +306,24 @@ onMounted(() => {
         class="formgrid grid"
       >
         <div class="field col-12">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <InputText
               v-model="createGameGenreFormValues.name"
               name="name"
-              class="flex-auto"
+              placeholder="Name"
               autocomplete="off"
               autofocus
+              fluid
             />
-            <Message
-              v-if="$createForm.name?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-            >{{ $createForm.name.error?.message }}</Message>
             <label for="name">Name</label>
-          </FloatLabel>
+          </IftaLabel>
+          <Message
+            v-if="$createForm.name?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+            >{{ $createForm.name.error?.message }}</Message
+          >
         </div>
         <div class="field col-6">
           <Button type="submit" severity="success" label="Bestätigen" />
@@ -344,22 +346,24 @@ onMounted(() => {
         class="formgrid grid"
       >
         <div class="field col-12">
-          <FloatLabel variant="in">
+          <IftaLabel>
             <InputText
               v-model="editGameGenreFormValues.name"
               name="name"
-              class="flex-auto"
+              placeholder="Name"
               autocomplete="off"
               autofocus
+              fluid
             />
-            <Message
-              v-if="$editForm.name?.invalid"
-              severity="error"
-              size="small"
-              variant="simple"
-            >{{ $editForm.name.error?.message }}</Message>
             <label for="name">Name</label>
-          </FloatLabel>
+          </IftaLabel>
+          <Message
+            v-if="$editForm.name?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+            >{{ $editForm.name.error?.message }}</Message
+          >
         </div>
         <div class="field col-6">
           <Button type="submit" severity="success" label="Bestätigen" />
@@ -377,7 +381,7 @@ onMounted(() => {
     >
       <div class="flex flex-col gap-4">
         <p>Möchten Sie das Genre "{{ state.deleteDialogGenreName }}" wirklich löschen?</p>
-        <div class="flex justify-end gap-2">
+        <div class="flex justify-start gap-2">
           <Button
             label="Abbrechen"
             severity="secondary"
